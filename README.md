@@ -2,6 +2,11 @@
 
 **One link. Two views. Clear evidence.**
 
+**Free to use, modify, share, and fork.** Keep attribution. New material uses a
+source-available license requiring separate permission for selling or paid
+access. Previously MIT-released code retains its MIT permissions, including sale.
+See the [license and earlier MIT release notice](#license).
+
 Verifact is a free local website checker with two views of the same recorded evidence:
 
 | Mode | For | What you see |
@@ -375,4 +380,29 @@ Exit codes: `0` successful command (`scan` has a final HTTP or HTTPS response), 
 
 ## License
 
-The project code is available under the [MIT License](LICENSE), copyright 2026 qazaqqyzzz. Bundled Space Grotesk and IBM Plex Mono fonts retain their separate [SIL Open Font Licenses](verifact/static/fonts/README.txt). External data and optional provider services remain subject to their own terms.
+The project uses the custom [Verifact Free Sharing License 1.0](LICENSE),
+copyright 2026 qazaqqyzzz, effective 31 October 2026.
+
+| Activity | Under the new license |
+| --- | --- |
+| Run locally, study the code, or modify it | Allowed |
+| Use it internally, including to check your own business website | Allowed |
+| Share free copies or publish free forks | Allowed; retain the license and attribution, and identify material changes |
+| Sell copies, modified versions, or substantial portions of the code | Requires separate written permission |
+| Charge for hosted access, an API, or a paid bundle containing the software | Requires separate written permission |
+
+This is **source-available software** with a no-sale restriction, not an
+OSI-approved open-source license. Paying an independent provider for your own
+AI, hardware, or infrastructure use is allowed; provider terms still apply.
+
+**Earlier MIT releases keep their permissions.** All code publicly released
+through commit [`c1c5960`](https://github.com/qazaqqyzzz/Verifact/tree/c1c596026c04b9435de9e33a0c3b9e007f912bfb),
+inclusive, remains usable under its
+[original MIT license](https://github.com/qazaqqyzzz/Verifact/blob/c1c596026c04b9435de9e33a0c3b9e007f912bfb/LICENSE),
+including its sale and redistribution permissions. The new license does not
+take those rights back, including for unchanged code carried into later
+versions. New material first released under the new license follows its terms.
+
+Bundled Space Grotesk and IBM Plex Mono fonts retain their separate
+[SIL Open Font Licenses](verifact/static/fonts/README.txt). Their permissions,
+and the terms of external data and optional provider services, are unchanged.
