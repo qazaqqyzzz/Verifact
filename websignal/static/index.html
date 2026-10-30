@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A clearer view of website risks. Check a link with Verifact, or switch to Developer mode for public security checks and practical fixes.">
+  <meta name="theme-color" content="#f4f7fc">
+  <title>Verifact — A clearer view of the web</title>
+  <link rel="stylesheet" href="./app.css">
+  <script src="./report_view.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body data-mode="simple">
+  <section class="file-open-notice" id="file-open-notice" aria-labelledby="file-open-title" hidden>
+    <span class="eyebrow">VERIFACT · LOCAL CHECKER</span>
+    <h1 id="file-open-title">Open the local checker.</h1>
+    <p>You opened one of Verifact’s source files. To check websites, open the running app on your computer.</p>
+    <a class="primary-button" href="http://127.0.0.1:8765/">Open Verifact <span aria-hidden="true">↗</span></a>
+    <div class="file-open-help"><h2>If the app isn’t running</h2><p>Double-click <strong>Start Verifact.command</strong> in the project folder, then keep its terminal window open.</p><details><summary>Start from a terminal instead</summary><p>From the project folder, run:</p><code>python3 -m verify serve --open</code><p>If you started Verifact on a different port, use the address shown in that terminal.</p></details></div>
+  </section>
+  <a class="skip-link" href="#main">Skip to checker</a>
+  <div class="app-shell">
+    <main id="main">
+      <header class="topbar">
+        <a class="brand" id="home-link" href="/" aria-label="Verifact home"><span>Verifact</span><svg class="brand-check" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4.5 4.5L19 6.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="mode-switch" role="group" aria-label="Choose a view"><button id="mode-simple" type="button" aria-pressed="true"><span aria-hidden="true">↗</span> Link check</button><button id="mode-developer" type="button" aria-pressed="false"><span aria-hidden="true">⌘</span> Developer</button></div>
+        <nav class="header-actions" aria-label="Session navigation">
+          <button id="new-check" class="header-new" type="button" aria-label="New check">＋ <span>New check</span></button>
+          <details id="history-disclosure" class="history-menu"><summary>Recent <span id="history-count">0</span><span aria-hidden="true">⌄</span></summary><div id="history" class="history"><p class="history-empty">Your recent checks will appear here.</p></div></details>
+          <button class="settings-button" id="settings-open" aria-label="Settings"><span class="connection-dot" id="connection-dot"></span><span id="key-status">Settings</span><span aria-hidden="true">⚙</span></button>
+        </nav>
+      </header>
+      <div class="content">
+        <section class="intro" aria-labelledby="page-title">
+          <div class="eyebrow" id="hero-eyebrow">A CLEARER VIEW OF THE WEB</div>
+          <h1 id="page-title">A little clarity.<br>Before you <span>click.</span></h1>
+          <p id="hero-description">Check the link. Understand the risks. Know your next step.</p>
+        </section>
+        <section class="scan-card" aria-label="Check a link">
+          <form id="scan-form">
+            <label for="target" id="target-label">Where does your link lead?</label>
+            <div class="input-row"><div class="url-input"><span aria-hidden="true">↗</span><input id="target" name="target" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="Paste a link or enter a domain" maxlength="2048" required aria-describedby="input-hint"></div><button class="primary-button" id="scan-button" type="submit">Check link <span aria-hidden="true">→</span></button></div>
+            <div class="scan-options"><details class="scan-settings" id="scan-settings"><summary>Check options <span aria-hidden="true">＋</span></summary><div class="scan-settings-body"><label for="expected-domain">Which domain were you expecting? <span class="optional-label">Optional</span></label><input id="expected-domain" type="text" placeholder="e.g. astanait.edu.kz" spellcheck="false" maxlength="253"><p>Compare this link with a domain you already know.</p><label class="checkbox-label"><input type="checkbox" id="community-check" checked> Check the free public warning list</label><p>Downloads CERT Polska’s domain list and checks locally. Limited coverage; no URL is sent to the list provider.</p><label class="checkbox-label"><input type="checkbox" id="rdap" checked> Include public registration information</label><label class="checkbox-label" id="security-contact-option" hidden><input type="checkbox" id="security-contact"> Check the public security contact file</label></div></details><span class="free-note"><span aria-hidden="true">✓</span> Free · No account needed</span></div>
+            <p class="input-hint" id="input-hint">Public URLs only. Never paste private or password-reset links.</p>
+          </form>
+          <div class="error-message" id="form-error" role="alert" hidden></div>
+        </section>
+        <div id="status-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+        <section id="progress" class="progress-card" hidden aria-label="Check in progress"><span class="spinner" aria-hidden="true"></span><div><h2 id="progress-title">Checking the website</h2><p id="progress-description">Reading public configuration. Some services can take a moment to respond.</p></div><span id="progress-time" class="elapsed">0s</span></section>
+        <section id="empty-state" class="empty-state" aria-label="What Verifact checks">
+          <div class="scope-pills" aria-label="Included checks"><span><i aria-hidden="true">↳</i><strong id="scope-one">Real destination</strong></span><span><i aria-hidden="true">◎</i><strong id="scope-two">Reported threats</strong></span><span><i aria-hidden="true">⌁</i><strong id="scope-three">Connection & page clues</strong></span></div>
+          <div class="sample-row"><span>Take a look around.</span><button class="text-button" id="demo-button">Try a sample report <span aria-hidden="true">↗</span></button></div>
+          <p class="scope-limit" id="scope-limit">A useful first check. No tool can guarantee that a link is safe.</p>
+        </section>
+        <section id="results" hidden aria-labelledby="result-domain">
+          <div id="demo-banner" class="demo-banner" hidden>SAMPLE · Synthetic data. No live scan or AI call.</div>
+          <div class="result-heading"><div><span class="eyebrow" id="report-label">YOUR LINK CHECK</span><p id="result-meta"></p></div><div class="download-actions"><button id="recheck-button" class="secondary-button" type="button">↻ Check again</button><button id="copy-summary" class="secondary-button" type="button">Copy summary</button><details class="export-menu"><summary class="secondary-button">Export ↓</summary><div><a id="download-html" download>HTML report</a><a id="download-json" download>JSON data</a></div></details></div></div>
+          <div id="consumer-report">
+            <section id="visitor-card" class="visitor-card tone-unknown" aria-labelledby="visitor-title">
+              <div class="visitor-site"><span class="site-monogram" id="visitor-monogram" aria-hidden="true">↗</span><div><span id="visitor-type" class="small-label">Website</span><h2 id="visitor-domain"></h2></div><span class="checked-label">LINK REPORT</span></div>
+
+              <div class="visitor-verdict"><span id="visitor-icon" class="visitor-icon" aria-hidden="true">?</span><div><span class="eyebrow">WHAT WE FOUND</span><h3 id="visitor-title" tabindex="-1">Not enough information</h3><p id="visitor-summary"></p></div></div>
+              <ul id="visitor-reasons" class="visitor-reasons"></ul>
+              <div class="visitor-action"><span aria-hidden="true">↗</span><div><strong>Your next step</strong><p id="visitor-next"></p></div></div>
+              <p class="visitor-limit">A basic risk check. New scams can be missed.</p>
+            </section>
+            <details class="visitor-details"><summary>What was checked <span aria-hidden="true">＋</span></summary><div><p id="visitor-description" class="visitor-description"></p><div id="visitor-coverage" class="visitor-coverage"></div><dl id="visitor-facts"></dl><p id="visitor-scope"></p><p class="muted">A valid certificate or a clear warning list does not verify who runs a website.</p></div></details>
+            <button type="button" id="open-developer-report" class="developer-invite"><span class="invite-icon" aria-hidden="true">⌘</span><span><strong>Building this website?</strong><small>See the security checks and practical fixes.</small></span><span aria-hidden="true">Developer mode →</span></button>
+          </div>
+          <div id="developer-report" hidden>
+          <section class="site-overview" aria-labelledby="result-domain">
+            <div class="site-heading"><div><span id="site-type" class="site-type"></span><h2 id="result-domain" tabindex="-1"></h2></div><span id="site-response" class="site-response"></span></div>
+            <p class="site-summary" id="site-summary"></p>
+            <details class="site-basis"><summary>About this page <span aria-hidden="true">⌄</span></summary><p class="site-title"><span>Page title</span><span id="site-title"></span></p><dl class="site-facts"><div><dt>Returned host</dt><dd id="site-host"></dd></div><div><dt>Scope</dt><dd id="site-scope">Submitted link</dd></div></dl><p id="site-basis"></p><ul id="site-signals"></ul><p class="site-description" id="site-description" hidden></p></details>
+          </section>
+          <nav class="report-tabs" role="tablist" aria-label="Report views"><button type="button" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" tabindex="0" data-tab="overview">Overview</button><button type="button" role="tab" id="tab-evidence" aria-controls="panel-evidence" aria-selected="false" tabindex="-1" data-tab="evidence">All checks <span id="tab-evidence-count"></span></button><button type="button" role="tab" id="tab-changes" aria-controls="panel-changes" aria-selected="false" tabindex="-1" data-tab="changes">Changes <span id="tab-change-count"></span></button></nav>
+          <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+          <div class="section-heading overview-heading"><h3><span class="section-number">01</span> Your results</h3><span class="section-note">Public security checks</span></div>
+          <div class="verdict-grid">
+            <section id="assessment" class="assessment tone-unknown" aria-labelledby="assessment-title" hidden>
+              <div class="section-kicker"><span class="card-icon" aria-hidden="true">◈</span><span id="assessment-title">Security setup</span></div>
+              <div class="score-layout"><div class="score-ring" id="score-ring"><div><strong id="score-value"></strong><span id="score-caption"></span></div></div><div class="score-meaning"><span class="status-pill tone-unknown" id="score-rating"></span><p id="assessment-description"></p></div></div>
+              <div class="score-coverage"><label for="score-progress" id="score-coverage-label"></label><progress id="score-progress" max="100" value="0"></progress></div>
+              <p class="score-disclaimer" id="score-disclaimer">Configuration coverage, not a guarantee of safety.</p>
+            </section>
+            <button type="button" id="review-card" class="review-card tone-unknown" aria-controls="priority-list"><span class="section-kicker"><span class="card-icon" aria-hidden="true">!</span><span>Fix priorities</span></span><strong class="metric-number" id="review-total">—</strong><span class="metric-label" id="review-label">Recorded concerns</span><span class="metric-note" id="review-hint"></span><span class="metric-link">See priorities →</span></button>
+            <section id="reputation-card" class="reputation-card tone-unknown" aria-labelledby="reputation-title">
+              <div class="section-kicker"><span class="card-icon" aria-hidden="true">◎</span><span id="reputation-title">Reported threats</span></div>
+              <div class="community-main"><strong class="metric-number" id="community-number">—</strong><span class="metric-label" id="community-label">Domains reported</span><span class="status-pill tone-unknown" id="community-status">Not checked</span><p class="reputation-footnote" id="community-detail"></p><a class="community-source" href="https://cert.pl/en/warning-list/" target="_blank" rel="noreferrer">Source: CERT Polska ↗</a><details id="community-details" class="threat-details" hidden><summary>See reported domains</summary><ul id="community-matches"></ul></details></div><details class="google-optional"><summary>Optional Google lookup</summary><div class="reputation-main"><strong class="metric-number" id="reputation-number">—</strong><span class="metric-label" id="reputation-number-label">URLs flagged</span><span class="status-pill tone-unknown" id="reputation-status">Not checked</span><p id="reputation-detail" hidden></p></div>
+              <p class="reputation-time" id="reputation-time"></p><details class="threat-details" id="threat-details" hidden><summary>See flagged URLs</summary><div id="reputation-matches"></div></details>
+              <button class="secondary-button" id="reputation-button" type="button">Check known threats ↗</button>
+              <p class="reputation-footnote" id="reputation-footnote">Separate from the configuration score. A no-match result is not proof of safety.</p>
+              <a id="reputation-attribution" href="https://developers.google.com/safe-browsing/v4/advisory" target="_blank" rel="noreferrer" hidden>Advisory provided by Google</a></details>
+            </section>
+          </div>
+          <p class="report-caution">Setup score measures protections. Warning lists check reported threats.</p><button type="button" id="pending-checks" class="pending-checks" hidden></button>
+
+          <section class="priorities-panel" id="priority-panel" aria-labelledby="priorities-title"><div class="section-heading"><h3 id="priorities-title"><span class="section-number">02</span> What to fix first</h3><span id="priority-count" class="priority-count"></span></div><p id="priorities-caption"></p><div id="priority-list"></div><button type="button" class="text-button" id="all-reviews-button" hidden>Show all review items</button></section>
+          <section class="signal-section" aria-labelledby="browse-title"><div class="section-heading"><h3 id="browse-title"><span class="section-number">03</span> Choose a security area</h3></div><div class="signal-grid" id="security-signals"></div><div class="count-strip" id="count-strip" hidden></div></section>
+          <div class="quick-links"><button type="button" id="dependencies-shortcut"><strong id="dependencies-number">—</strong><span><span>External scripts</span><small id="dependencies-caption">Not recorded</small></span><span aria-hidden="true">→</span></button><button type="button" id="journey-shortcut"><strong id="journey-number">—</strong><span><span id="journey-summary">Redirects</span><small id="journey-caption"></small></span><span aria-hidden="true">→</span></button><button type="button" id="domain-shortcut"><strong id="domain-number">—</strong><span><span id="domain-summary">URL warnings</span><small id="domain-caption"></small></span><span aria-hidden="true">→</span></button></div>
+            <details class="detail-section" id="ai-section"><summary><span><strong>Explain with AI</strong><small id="ai-summary-label">Optional help with the findings</small></span><span class="disclosure-plus" aria-hidden="true">+</span></summary><section class="ai-panel detail-body" aria-labelledby="ai-title"><div class="ai-panel-heading"><h3 id="ai-title">Understand your results</h3><button class="ai-button" id="explain-button">Choose AI ↗</button></div><p id="ai-description"></p><p class="ai-disclosure" id="ai-disclosure"></p><div id="ai-error" class="error-message" role="alert" hidden></div><div id="ai-content"></div><button id="preview-button" class="text-button" hidden>Preview model input ↗</button></section></details>
+          </div>
+          <div id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" hidden><div class="report-details">
+            <section id="technical-section" class="technical-section">
+            <section class="evidence-panel" id="evidence-section"><div class="evidence-top"><h3>Tests &amp; fixes</h3><span id="evidence-caption"></span></div><div class="detail-body">
+              <div id="result-summary" class="summary-grid" aria-label="Finding counts"></div><p class="coverage-note" id="coverage-note"></p>
+              <div class="findings-heading"><label class="finding-search"><span class="sr-only">Search findings</span><input id="finding-search" type="search" placeholder="Search checks…" autocomplete="off"></label><span id="finding-count"></span><label class="status-filter">Show <select id="status-filter"><option value="all">All results</option><option value="attention">Needs action</option><option value="pass">Passed</option><option value="info">Additional facts</option><option value="unknown">Could not check</option></select></label></div>
+              <div class="category-tabs" id="category-tabs" role="group" aria-label="Finding category"><button class="active" data-category="all" aria-pressed="true">All checks</button><button data-category="Transport" aria-pressed="false">Connection</button><button data-category="Browser" aria-pressed="false">Browser protection</button><button data-category="Quality" aria-pressed="false">Page quality</button><button data-category="Domain" aria-pressed="false">Domain</button></div><button type="button" class="active-selection" id="active-selection" hidden></button><div class="check-columns" aria-hidden="true"><span>Test</span><span>Result</span><span></span></div><div id="findings" class="findings"></div>
+            </div></section>
+            <details class="detail-section" id="dependencies-section"><summary><span><strong>Scripts &amp; embeds</strong><small id="dependencies-summary">External resources in the page</small></span><span class="disclosure-plus" aria-hidden="true">+</span></summary><div class="detail-body"><div class="dependency-counts" id="dependency-counts"></div><p id="dependencies-note"></p><div class="dependency-table-wrap"><table class="dependency-table" id="dependency-table"><thead><tr><th scope="col">Observed origin</th><th scope="col">Scripts</th><th scope="col">Embeds</th><th scope="col">No integrity</th></tr></thead><tbody id="dependency-origins"></tbody></table></div><p class="muted" id="dependency-limits"></p></div></details>
+            <details class="detail-section" id="link-section"><summary><span><strong>Where does this link go?</strong><small>Redirect trail & domain clues</small></span><span class="disclosure-plus" aria-hidden="true">+</span></summary><div class="detail-body"><p id="link-note"></p><ol id="redirect-trail" class="redirect-trail"></ol><div id="domain-clues" class="domain-clues"></div></div></details>
+            <details class="detail-section" id="method-section"><summary><span><strong>How to read this score</strong><small>Weights, status lights and limitations</small></span><span class="disclosure-plus" aria-hidden="true">+</span></summary><div class="detail-body">
+              <p class="score-reason" id="score-reason" hidden></p>
+              <div class="assessment-gaps" id="assessment-gaps" hidden><h3>Not checked</h3><ul id="assessment-gap-list"></ul></div>
+              <p id="score-methodology"></p><p id="rating-methodology"></p><p id="score-full-disclaimer"></p>
+              <div class="score-table-wrap"><table><caption>Fixed checklist weights</caption><thead><tr><th scope="col">Check</th><th scope="col">Points</th><th scope="col">Observed</th></tr></thead><tbody id="score-breakdown"></tbody></table></div><p id="score-method-version"></p>
+              <h3>Scope & limitations</h3><ul id="limitations-list"></ul>
+            </div></details>
+            </section>
+          </div></div>
+          <div id="panel-changes" role="tabpanel" aria-labelledby="tab-changes" hidden>            <section class="detail-section" id="comparison-section"><div class="evidence-top"><h3>What changed?</h3><span id="comparison-caption"></span></div><div class="detail-body"><p id="comparison-summary">Run the same link again to compare it with an earlier check, or choose a saved Verifact JSON report.</p><div class="comparison-actions"><button type="button" class="secondary-button" id="compare-session">Compare previous check</button><label class="secondary-button file-button" for="compare-file">Choose saved report<input type="file" id="compare-file" accept="application/json,.json" class="sr-only"></label></div><p class="input-hint">Compared locally. Imported reports are user-supplied evidence, not independently verified.</p><div id="comparison-error" class="error-message" role="alert" hidden></div><div id="comparison-changes"></div></div></section>
+          </div>
+          </div>
+        </section>
+        <footer class="app-footer"><span>VERIFACT <span id="version"></span></span><span><i class="local-dot"></i> On your computer · Private session</span><span>Clarity before the click.</span></footer>
+      </div>
+    </main>
+  </div>
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <div class="dialog-top"><span class="eyebrow">YOUR PREFERENCES</span><button class="icon-button" id="settings-close" aria-label="Close settings">×</button></div>
+    <h2 id="settings-title">Make it work for you</h2>
+    <p>Core checks work immediately. Optional services use your own local setup or key, and never change the configuration score.</p>
+    <form id="settings-form">
+      <label for="ai-provider">Explanation mode</label>
+      <select id="ai-provider"><option value="builtin">Built-in explanations · free</option><option value="ollama">Local AI · Qwen via Ollama</option><option value="openai">OpenAI · your own credit</option></select>
+      <p id="provider-description" class="provider-description"></p>
+      <div id="local-ai-help" class="provider-help" hidden><strong>One-time local setup</strong><p>Install Ollama, open it and keep it running, then download the model once:</p><code id="local-model-command">ollama pull qwen3.5:2b-q4_K_M</code><p>Qwen 3.5 2B is about a 1.9 GB download, plus Ollama. Running it needs additional memory and processing power; speed depends on your computer. Verifact does not install or download anything automatically.</p></div>
+      <div id="settings-key-fields" hidden><label for="api-key">Your personal OpenAI API key</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Only needed for OpenAI" maxlength="512"><p class="input-hint">Kept in this local app’s memory for this session. Never saved in browser storage, written into the code, or shared with other users.</p></div>
+      <div id="configured-key-note" class="provider-help" hidden></div>
+      <details class="integration-settings"><summary>Google Safe Browsing <span id="reputation-config-label">Not connected</span></summary><p>Optional known-threat lists. Free for non-commercial use; Google account, API activation and your own key required. Commercial projects need a suitable service such as Web Risk.</p><a href="https://developers.google.com/safe-browsing/v4/get-started" target="_blank" rel="noreferrer">Setup guide ↗</a><label for="reputation-key">Your Google Safe Browsing key</label><input id="reputation-key" type="password" autocomplete="off" spellcheck="false" maxlength="512" placeholder="Only needed for threat lookups"><p id="reputation-key-note" class="input-hint">Kept in local server memory for this session. A lookup only happens when you request one.</p><button id="clear-reputation-key" class="text-button" type="button" hidden>Remove session key</button></details>
+      <div id="settings-error" class="error-message" role="alert" hidden></div><div id="settings-success" class="success-message" role="status" hidden></div>
+      <div class="dialog-actions"><button type="button" class="text-button" id="clear-key" hidden>Remove session key</button><button type="submit" class="primary-button" id="save-key">Save preference</button></div>
+    </form>
+    <div class="key-note"><strong id="settings-status">Built-in explanations active</strong><span id="settings-model"></span><span>Saving a preference does not call a model or spend API credit.</span></div>
+  </dialog>
+  <dialog id="reputation-dialog" aria-labelledby="reputation-dialog-title"><div class="dialog-top"><span class="eyebrow">OPTIONAL THREAT LOOKUP</span><button class="icon-button" id="reputation-close" aria-label="Close threat lookup">×</button></div><h2 id="reputation-dialog-title">Check with Google</h2><p>This sends the submitted link and observed redirect URLs to Google Safe Browsing. Review them below before continuing. Don’t send confidential links.</p><ul id="reputation-url-list" class="reputation-url-list"></ul><p>Google’s lists can miss harmful sites or flag legitimate ones. A match means <strong>potentially harmful</strong>; no match does not mean safe.</p><p class="input-hint">Free non-commercial API use is subject to Google’s terms and quota.</p><div id="reputation-error" class="error-message" role="alert" hidden></div><button id="reputation-confirm" class="primary-button" type="button">Send URLs & check →</button></dialog>
+  <dialog id="copy-dialog" aria-labelledby="copy-title"><div class="dialog-top"><h2 id="copy-title">Copy report summary</h2><button type="button" class="icon-button" id="copy-close" aria-label="Close summary">×</button></div><label class="sr-only" for="copy-text">Report summary</label><textarea id="copy-text" readonly rows="12"></textarea></dialog>
+  <dialog id="preview-dialog" class="preview-dialog" aria-labelledby="preview-title"><div class="dialog-top"><span class="eyebrow">BEFORE YOU GENERATE</span><button class="icon-button" id="preview-close" aria-label="Close AI input preview">×</button></div><h2 id="preview-title">What the AI receives</h2><p>The model gets selected findings, their evidence and the explanation instructions. This preview makes no API call.</p><pre id="preview-content"></pre></dialog>
+</body>
+</html>

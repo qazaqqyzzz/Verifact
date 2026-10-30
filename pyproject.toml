@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "verifact-cli"
+version = "0.6.0"
+description = "Verifact: clear link guidance and evidence-based website configuration checks"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = []
+authors = [{name = "qazaqqyzzz"}]
+
+[project.scripts]
+verifact = "websignal.cli:main"
+verify = "websignal.cli:main"
+websignal = "websignal.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["websignal*", "verify*"]
+
+[tool.setuptools.package-data]
+websignal = ["static/*.html", "static/*.css", "static/*.js", "static/fonts/*.ttf", "static/fonts/*.txt"]

@@ -1,0 +1,847 @@
+{
+  "schema_version": 1,
+  "tool_version": "0.6.0",
+  "domain": "demo.example.com",
+  "created_at": "2026-10-30T21:41:15.081508+00:00",
+  "demo": true,
+  "scope": "Public configuration observations; the supplied link and its redirects, a separate HTTP homepage upgrade check, and optional RDAP lookup. No exploitation or crawling.",
+  "requests": 0,
+  "summary": {
+    "info": 10,
+    "pass": 8,
+    "attention": 4
+  },
+  "findings": [
+    {
+      "id": "dns",
+      "category": "Domain",
+      "status": "info",
+      "title": "Public address observations",
+      "evidence": [
+        {
+          "hostname": "demo.example.com",
+          "addresses": [
+            "192.0.2.20 (synthetic documentation address)"
+          ]
+        },
+        {
+          "hostname": "demo.example.com",
+          "addresses": [
+            "192.0.2.20 (synthetic documentation address)"
+          ]
+        }
+      ],
+      "explanation": "A/AAAA addresses resolved for final response hosts. They may belong to a CDN; they do not establish owner identity or hosting location.",
+      "recommendation": ""
+    },
+    {
+      "id": "https_redirect",
+      "category": "Transport",
+      "status": "pass",
+      "title": "HTTP upgrades to HTTPS",
+      "evidence": {
+        "chain": [
+          {
+            "url": "http://demo.example.com/",
+            "status": 301
+          },
+          {
+            "url": "https://demo.example.com/",
+            "status": 200
+          }
+        ],
+        "error": null
+      },
+      "explanation": "Records whether the target hostname's separate HTTP homepage entry point redirects to HTTPS. The page and TLS observations apply to the supplied link's final response. A later request error is shown separately.",
+      "recommendation": ""
+    },
+    {
+      "id": "tls",
+      "category": "Transport",
+      "status": "pass",
+      "title": "TLS certificate verification",
+      "evidence": {
+        "hostname": "demo.example.com",
+        "verified": true,
+        "version": "TLSv1.3",
+        "not_after": "Dec 31 23:59:59 2099 GMT",
+        "issuer": "Synthetic fixture CA"
+      },
+      "explanation": "The final HTTPS host passed certificate and hostname verification using this machine's trust store. The negotiated protocol is one connection, not a survey of supported TLS versions.",
+      "recommendation": ""
+    },
+    {
+      "id": "certificate_expiry",
+      "category": "Transport",
+      "status": "pass",
+      "title": "Certificate renewal window",
+      "evidence": {
+        "days_remaining": 26725,
+        "expires": "Dec 31 23:59:59 2099 GMT"
+      },
+      "explanation": "26725 full days remained when checked. This is outside the renewal reminder window (fewer than 14 days).",
+      "recommendation": "",
+      "presentation": {
+        "metrics": [
+          {
+            "value": "26725",
+            "label": "Days remaining when checked"
+          },
+          {
+            "value": "31 Dec 2099",
+            "label": "Expires at 23:59 UTC"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hsts",
+      "category": "Browser",
+      "status": "pass",
+      "title": "HTTPS-only browser policy",
+      "evidence": "max-age=31536000",
+      "explanation": "Checks for a valid HSTS header with one positive max-age on the HTTPS response. Preload lists, cached policies and parent-domain policies are not checked.",
+      "recommendation": "Review HSTS deployment and subdomain readiness before setting a policy."
+    },
+    {
+      "id": "csp",
+      "category": "Browser",
+      "status": "attention",
+      "title": "Content Security Policy",
+      "evidence": "No enforcing CSP header or HTML meta policy observed",
+      "explanation": "Policy presence is recorded. Directive strength, browser behavior, and exploitability are not evaluated. Report-only policies do not enforce restrictions.",
+      "recommendation": "Develop a resource policy for this application and evaluate it in report-only mode before enforcement."
+    },
+    {
+      "id": "framing",
+      "category": "Browser",
+      "status": "attention",
+      "title": "Framing policy",
+      "evidence": {
+        "x_frame_options": "",
+        "frame_ancestors": null
+      },
+      "explanation": "Records an observed framing directive. Its effective restrictions are not validated. Some sites intentionally allow embedding.",
+      "recommendation": "If embedding is unnecessary, restrict it using CSP frame-ancestors."
+    },
+    {
+      "id": "nosniff",
+      "category": "Browser",
+      "status": "pass",
+      "title": "MIME sniffing protection",
+      "evidence": "nosniff",
+      "explanation": "Looks for X-Content-Type-Options: nosniff.",
+      "recommendation": "Return accurate Content-Type values and the nosniff header."
+    },
+    {
+      "id": "referrer",
+      "category": "Browser",
+      "status": "info",
+      "title": "Referrer policy",
+      "evidence": {
+        "header": "strict-origin-when-cross-origin",
+        "header_policy": "strict-origin-when-cross-origin",
+        "meta_policies": [],
+        "policy": "strict-origin-when-cross-origin",
+        "source": "header",
+        "complete_html": true,
+        "limited": false
+      },
+      "explanation": "The selected header declaration is strict-origin-when-cross-origin. This reviews an observed declaration, not the effective policy for every request. HTML metadata, element attributes, scripts and browser settings may change behavior; actual referrer traffic was not tested. This additional review does not change the configuration percentage.",
+      "recommendation": ""
+    },
+    {
+      "id": "title",
+      "category": "Quality",
+      "status": "pass",
+      "title": "Page title",
+      "evidence": "Demo Studio",
+      "explanation": "A title helps identify the page; its accuracy is not assessed.",
+      "recommendation": ""
+    },
+    {
+      "id": "viewport",
+      "category": "Quality",
+      "status": "pass",
+      "title": "Mobile viewport declaration",
+      "evidence": "width=device-width, initial-scale=1",
+      "explanation": "A declaration is observed, but responsive layout is not tested.",
+      "recommendation": ""
+    },
+    {
+      "id": "language",
+      "category": "Quality",
+      "status": "pass",
+      "title": "Document language declaration",
+      "evidence": "en",
+      "explanation": "A lang attribute is observed; the language value and page content are not compared.",
+      "recommendation": ""
+    },
+    {
+      "id": "image_alt",
+      "category": "Quality",
+      "status": "attention",
+      "title": "Image alternative text attributes",
+      "evidence": {
+        "images": 1,
+        "missing_alt_attributes": 1
+      },
+      "explanation": "Checks attribute presence only. Empty alt can be correct for decorative images. This is not an accessibility audit.",
+      "recommendation": ""
+    },
+    {
+      "id": "http_resources",
+      "category": "Quality",
+      "status": "attention",
+      "title": "Explicit HTTP resource references",
+      "evidence": {
+        "count": 1,
+        "examples": [
+          "http://assets.example.com/app.js"
+        ]
+      },
+      "explanation": "Checks a subset of resource attributes in static HTML. Browser upgrades or blocking may apply. CSS, srcset and JavaScript-created requests are not inspected.",
+      "recommendation": ""
+    },
+    {
+      "id": "password_forms",
+      "category": "Browser",
+      "status": "info",
+      "title": "Password form destinations",
+      "evidence": {
+        "forms_with_password": 0,
+        "password_inputs": 0,
+        "http_actions": 0,
+        "get_submissions": 0,
+        "cross_origin_actions": 0,
+        "unsupported_actions": 0,
+        "unassociated_password_inputs": 0,
+        "complete_html": true,
+        "destinations": []
+      },
+      "explanation": "No named, enabled password form was observed in the static HTML. Observes named, enabled password fields and static form destinations, including submit-button overrides. No form is submitted, and JavaScript behavior and authentication are not tested. This additional signal does not change the configuration score.",
+      "recommendation": ""
+    },
+    {
+      "id": "cookie_flags",
+      "category": "Browser",
+      "status": "info",
+      "title": "Cookie attributes",
+      "evidence": {
+        "cookies_observed": 0,
+        "cookies": [],
+        "missing_secure": 0,
+        "missing_http_only": 0,
+        "missing_same_site": 0,
+        "same_site_none_without_secure": 0,
+        "malformed_count": 0,
+        "limited": false
+      },
+      "explanation": "No Set-Cookie fields were observed on this response; later pages may set cookies. Only Set-Cookie fields on this response are inspected; values are never included. Cookie purpose and logged-in sessions are unknown. HttpOnly may be intentionally absent on cookies used by scripts; browser SameSite defaults vary. This additional signal does not change the configuration score.",
+      "recommendation": ""
+    },
+    {
+      "id": "header_quality",
+      "category": "Browser",
+      "status": "info",
+      "title": "Security header consistency",
+      "evidence": {
+        "issues": [],
+        "limited_headers": [],
+        "checked_headers": [
+          "x-content-type-options",
+          "x-frame-options",
+          "content-security-policy"
+        ]
+      },
+      "explanation": "Reviews selected declarations for multiple values and repeated CSP directives. This is not a full policy parser or browser enforcement test. Original duplicate field boundaries are not retained by this check.",
+      "recommendation": ""
+    },
+    {
+      "id": "cors_policy",
+      "category": "Browser",
+      "status": "info",
+      "title": "Cross-origin response sharing",
+      "evidence": {
+        "allow_origin": "absent",
+        "credentials_allowed": false,
+        "vary_origin": false,
+        "origin_probe_performed": false,
+        "issues": []
+      },
+      "explanation": "Only the ordinary public response was inspected. No Origin header was injected, no preflight was sent, and authenticated data access was not tested. No cross-origin sharing permission was observed; CORS headers are not required on every page.",
+      "recommendation": ""
+    },
+    {
+      "id": "response_caching",
+      "category": "Browser",
+      "status": "info",
+      "title": "Response caching",
+      "evidence": {
+        "directives": [],
+        "no_store": false,
+        "private": false,
+        "no_cache": false,
+        "explicit_shared_cache": false,
+        "password_input_observed": false,
+        "sets_cookie": false,
+        "personalized_content_confirmed": false,
+        "issues": []
+      },
+      "explanation": "Describes caching instructions on this one public response. A login form or Set-Cookie field does not prove the content is personalized. No Cache-Control field was observed. Public pages can intentionally be cacheable. Actual browser/CDN caches and responses after signing in were not tested.",
+      "recommendation": ""
+    },
+    {
+      "id": "browser_isolation",
+      "category": "Browser",
+      "status": "info",
+      "title": "Optional browser isolation policies",
+      "evidence": {
+        "policies": {
+          "cross-origin-opener-policy": "absent",
+          "cross-origin-embedder-policy": "absent",
+          "cross-origin-resource-policy": "absent",
+          "permissions-policy": "absent"
+        },
+        "unrecognized_headers": [],
+        "limited_headers": [],
+        "browser_isolation_tested": false
+      },
+      "explanation": "Known COOP, COEP and CORP policy tokens are recorded, not a complete grammar validation; Permissions-Policy is presence-only. These policies are optional and depend on the application's embeds, resources, sign-in and payment flows. Absence is not scored as a failure. Actual isolation and feature permissions were not tested.",
+      "recommendation": ""
+    },
+    {
+      "id": "public_disclosures",
+      "category": "Browser",
+      "status": "info",
+      "title": "Public software and error details",
+      "evidence": {
+        "version_hints": [],
+        "error_page_markers": [],
+        "error_response_checked": false,
+        "version_vulnerabilities_checked": false,
+        "limited_headers": false
+      },
+      "explanation": "Selected public headers and generator metadata may disclose software versions. These are unverified hints, not proof of an installed version, outdated software or a vulnerability. No hidden paths or credentials were searched, and no software vulnerability database was queried.",
+      "recommendation": ""
+    },
+    {
+      "id": "iframe_sandbox",
+      "category": "Browser",
+      "status": "info",
+      "title": "Iframe sandbox declarations",
+      "evidence": {
+        "iframes_observed": 0,
+        "sandbox_present": 0,
+        "scripts_and_same_origin_allowed": 0,
+        "same_origin_source_with_both": 0,
+        "unresolved_sources": 0,
+        "limited": false,
+        "complete_html": true
+      },
+      "explanation": "Records sandbox attributes in static HTML. A same-origin frame allowed both scripts and same-origin access may remove its sandbox. Initial source origins are observations only: frame responses, redirects, inherited policies and script changes were not tested. An absent sandbox can be intentional for trusted embeds.",
+      "recommendation": ""
+    }
+  ],
+  "site_profile": {
+    "title": "Demo Studio",
+    "description": "",
+    "type": "Website",
+    "summary": "This is a public webpage. The available page signals do not establish a more specific purpose.",
+    "basis": "Purpose is inferred from the recorded page signals, not independently verified. The hostname and page wording do not verify the site's identity or legitimacy.",
+    "signals": [],
+    "profile_version": "site-profile-v4",
+    "hostname": "demo.example.com",
+    "https": true,
+    "http_status": 200
+  },
+  "page_risks": {
+    "status": "assessed",
+    "script_count": 1,
+    "cross_origin_scripts": 1,
+    "without_integrity": 1,
+    "iframe_count": 0,
+    "cross_origin_iframes": 0,
+    "integrity_present": 0,
+    "integrity_unknown": 0,
+    "crossorigin_present": 0,
+    "unresolved_count": 0,
+    "origins": [
+      {
+        "origin": "http://assets.example.com",
+        "scripts": 1,
+        "iframes": 0,
+        "without_integrity": 1
+      }
+    ],
+    "origins_omitted": 0,
+    "limited": false,
+    "review": {
+      "id": "page_dependencies",
+      "title": "Review external script dependencies",
+      "tone": "amber",
+      "why": "1 script from another origin lacks usable integrity metadata. The script content was not downloaded or checked.",
+      "action": "Owner: confirm these sources are needed; pin fixed versions and add integrity checks where practical."
+    },
+    "scope": "Static script-src and iframe-src observations from the downloaded HTML. No dependency was requested or executed.",
+    "limits": [
+      "Different origins do not establish different owners, and a dependency is not evidence of malware or a vulnerability.",
+      "Integrity checks recognize SHA-256, SHA-384 or SHA-512 metadata syntax only. Resource bytes and matching hashes were not verified.",
+      "Crossorigin attribute presence does not verify CORS response headers, successful loading or browser enforcement.",
+      "Inline scripts, srcdoc frames, stylesheets, module imports and JavaScript-created requests are outside this inventory.",
+      "At most 200 supported src declarations and 20 origin rows are retained. Partial counts are observed lower bounds."
+    ],
+    "reason": ""
+  },
+  "response": {
+    "url": "https://demo.example.com/",
+    "status": 200,
+    "body_truncated": false,
+    "body_error": null
+  },
+  "limitations": [
+    "A snapshot from one network and one client, not proof that a website is safe or unsafe.",
+    "JavaScript is not executed. Login flows, application logic and vulnerabilities are not tested.",
+    "Header and certificate observations apply to the returned response; redirects may change the hostname.",
+    "Network failures remain unknown. Domain age and missing privacy links do not determine legitimacy.",
+    "Full accepted URL paths and query strings are included in this report. Common private-token links are blocked, but not every sensitive URL can be recognized."
+  ],
+  "target_url": "https://demo.example.com/",
+  "scan_mode": "exact_link",
+  "link_analysis": {
+    "input_url": "https://demo.example.com/",
+    "final_url": "https://demo.example.com/",
+    "redirects": [
+      {
+        "url": "https://demo.example.com/",
+        "status": 200
+      }
+    ],
+    "redirect_count": 0,
+    "host_changes": 0,
+    "completed": true,
+    "warnings": [],
+    "expected_domain": null,
+    "expected_match": null,
+    "error": null,
+    "error_kind": null,
+    "note": "URL structure and redirects are observations, not proof of a scam or a site's identity. Full accepted paths and query strings are included in this report; do not share reports containing private links."
+  },
+  "community_reputation": {
+    "provider": "CERT Polska",
+    "status": "not_checked",
+    "source_url": "https://cert.pl/lista-ostrzezen/",
+    "checked_at": null,
+    "fetched_at": null,
+    "expires_at": null,
+    "checked_hosts": [],
+    "checked_count": 0,
+    "matches": [],
+    "feed_entries": null,
+    "stale": false,
+    "detail": "The community warning list was not checked.",
+    "scope": "One community domain-warning list, focused mainly on threats targeting Poland. Other countries and newly created threats may be missing.",
+    "privacy_note": "The public list is downloaded and matched on this computer. Your links are not sent to CERT Polska.",
+    "notice": "A listed domain is a warning to investigate, not proof about every page. No match does not establish that a website is safe. CERT Polska does not endorse Verifact."
+  },
+  "assessment": {
+    "label": "Security configuration score",
+    "method_version": "configuration-v1",
+    "value": 70,
+    "potential": 70,
+    "earned": 70,
+    "possible": 100,
+    "coverage": 100,
+    "assessed_checks": 8,
+    "total_checks": 8,
+    "unknown_weight": 0,
+    "items": [
+      {
+        "finding_id": "tls",
+        "title": "TLS certificate verification",
+        "weight": 25,
+        "earned": 25,
+        "assessed": true,
+        "status": "pass",
+        "note": "Passed the named check."
+      },
+      {
+        "finding_id": "https_redirect",
+        "title": "HTTP upgrades to HTTPS",
+        "weight": 15,
+        "earned": 15,
+        "assessed": true,
+        "status": "pass",
+        "note": "Passed the named check."
+      },
+      {
+        "finding_id": "certificate_expiry",
+        "title": "Certificate renewal window",
+        "weight": 5,
+        "earned": 5,
+        "assessed": true,
+        "status": "pass",
+        "note": "Passed the named check."
+      },
+      {
+        "finding_id": "hsts",
+        "title": "HTTPS-only browser policy",
+        "weight": 15,
+        "earned": 15,
+        "assessed": true,
+        "status": "pass",
+        "note": "Passed the named check."
+      },
+      {
+        "finding_id": "nosniff",
+        "title": "MIME sniffing protection",
+        "weight": 10,
+        "earned": 10,
+        "assessed": true,
+        "status": "pass",
+        "note": "Passed the named check."
+      },
+      {
+        "finding_id": "csp",
+        "title": "Content policy presence",
+        "weight": 10,
+        "earned": 0,
+        "assessed": true,
+        "status": "attention",
+        "note": "Review the observed configuration."
+      },
+      {
+        "finding_id": "framing",
+        "title": "Framing policy presence",
+        "weight": 10,
+        "earned": 0,
+        "assessed": true,
+        "status": "attention",
+        "note": "Review the observed configuration."
+      },
+      {
+        "finding_id": "http_resources",
+        "title": "No explicit HTTP resource references",
+        "weight": 10,
+        "earned": 0,
+        "assessed": true,
+        "status": "attention",
+        "note": "Review the observed configuration."
+      }
+    ],
+    "disclaimer": "This is a weighted checklist of observed public security configuration, not a percentage probability that the website is secure. Even 100/100 does not establish that a site is safe or free of vulnerabilities.",
+    "methodology": [
+      "Version configuration-v1 uses fixed, heuristic weights totaling 100 points; they are not a standardized or independently validated security rating.",
+      "A passed checklist check earns its weight. CSP and framing observations earn presence credit only; directive strength and effective restrictions are not validated.",
+      "Unavailable or missing checks remain unassessed. Their weights produce a possible range, rather than being treated as failures or removed from the denominator.",
+      "Coverage is the percentage of checklist weight that was assessed. The upper end of a partial range assumes every unassessed check would earn its weight.",
+      "Domain registration age, DNS addresses, page title, mobile viewport, language and image descriptions do not change this security configuration score.",
+      "No authentication, application logic, exploitation, malicious content or complete TLS/cipher audit is performed. AI cannot change the measured findings or scoring rules."
+    ]
+  },
+  "guidance": {
+    "kind": "rules",
+    "label": "Built-in explanation",
+    "items": [
+      {
+        "finding_id": "csp",
+        "explanation": "Policy presence is recorded. Directive strength, browser behavior, and exploitability are not evaluated. Report-only policies do not enforce restrictions.",
+        "next_step": "Develop a resource policy for this application and evaluate it in report-only mode before enforcement."
+      },
+      {
+        "finding_id": "framing",
+        "explanation": "Records an observed framing directive. Its effective restrictions are not validated. Some sites intentionally allow embedding.",
+        "next_step": "If embedding is unnecessary, restrict it using CSP frame-ancestors."
+      },
+      {
+        "finding_id": "image_alt",
+        "explanation": "Checks attribute presence only. Empty alt can be correct for decorative images. This is not an accessibility audit.",
+        "next_step": ""
+      },
+      {
+        "finding_id": "http_resources",
+        "explanation": "Checks a subset of resource attributes in static HTML. Browser upgrades or blocking may apply. CSS, srcset and JavaScript-created requests are not inspected.",
+        "next_step": ""
+      }
+    ]
+  },
+  "dashboard": {
+    "method_version": "security-dashboard-v1",
+    "rating": {
+      "tone": "amber",
+      "label": "Needs review",
+      "summary": "Security observations need review. Open the priority findings to see the evidence and next steps.",
+      "methodology": "With complete checklist evidence, 80–100 points starts green, 50–79 amber, and below 50 red. Any recorded security issue prevents green. A certificate verification issue, unencrypted final page, or a password form using HTTP or GET makes the light red, even with a high score. Incomplete evidence stays neutral unless one of those priority issues was observed. Extra form and cookie checks do not change the numeric score. These are project-defined review priorities, not a safety verdict.",
+      "override": null
+    },
+    "signals": [
+      {
+        "id": "connection",
+        "title": "Connection",
+        "tone": "green",
+        "label": "Checks observed",
+        "detail": "Certificate, HTTPS redirect and renewal-window checks passed for the observed connection.",
+        "finding_ids": [
+          "tls",
+          "https_redirect",
+          "certificate_expiry"
+        ]
+      },
+      {
+        "id": "browser",
+        "title": "Browser protection",
+        "tone": "amber",
+        "label": "Needs review",
+        "detail": "2 checks need review. No enforcing content policy was observed. This does not establish whether an attack is possible.",
+        "finding_ids": [
+          "hsts",
+          "csp",
+          "framing",
+          "nosniff"
+        ]
+      },
+      {
+        "id": "page",
+        "title": "Page exposure",
+        "tone": "amber",
+        "label": "Needs review",
+        "detail": "The page references resources over HTTP. Browsers may block or upgrade these requests.",
+        "finding_ids": [
+          "http_resources",
+          "password_forms",
+          "cookie_flags"
+        ]
+      }
+    ],
+    "priorities": [
+      {
+        "finding_id": "http_resources",
+        "title": "Unencrypted resource references",
+        "detail": "The page references resources over HTTP. Browsers may block or upgrade these requests.",
+        "next_step": "",
+        "tone": "amber"
+      },
+      {
+        "finding_id": "csp",
+        "title": "Content Security Policy",
+        "detail": "No enforcing content policy was observed. This does not establish whether an attack is possible.",
+        "next_step": "Develop a resource policy for this application and evaluate it in report-only mode before enforcement.",
+        "tone": "amber"
+      },
+      {
+        "finding_id": "framing",
+        "title": "Framing policy",
+        "detail": "No supported framing restriction was observed. Some sites intentionally allow embedding.",
+        "next_step": "If embedding is unnecessary, restrict it using CSP frame-ancestors.",
+        "tone": "amber"
+      }
+    ],
+    "coverage_gaps": [],
+    "security_counts": {
+      "attention": 3,
+      "unknown": 0,
+      "passed": 5
+    }
+  },
+  "visitor_assessment": {
+    "version": "visitor-v1",
+    "status": "unknown",
+    "tone": "gray",
+    "label": "Check incomplete",
+    "summary": "Page inspected; current community-list coverage is missing.",
+    "reasons": [
+      {
+        "id": "community_gap",
+        "title": "Community check not run",
+        "detail": "No community-list lookup was included in this report.",
+        "source": "community"
+      }
+    ],
+    "next_action": "Turn on the community check, then check again.",
+    "coverage": {
+      "page": "assessed",
+      "connection": "assessed",
+      "destination": "assessed",
+      "community_feed": "not_checked",
+      "optional_reputation": "not_checked"
+    },
+    "checked_at": "2026-10-30T21:41:15.081508+00:00",
+    "expires_at": null,
+    "limitations": [
+      "Site identity and trustworthiness are unverified.",
+      "The community list mainly covers threats targeting Poland and can miss new scams.",
+      "Scripts, downloads, payments and actual sign-in behavior were not tested."
+    ]
+  },
+  "ai": {
+    "provider": "fixture",
+    "model": "Hand-authored example",
+    "generated_at": "2026-10-30T21:41:15.083233+00:00",
+    "prompt_version": "websignal-explain-4",
+    "usage": {
+      "input_tokens": null,
+      "output_tokens": null
+    },
+    "summary": "This synthetic sample represents a public website homepage. Its encrypted connection checks passed, but the page includes an HTTP script reference and lacks some browser policies. Start with the resource reference, then review the content and framing policies. These configuration observations do not establish whether an attack is possible.",
+    "items": [
+      {
+        "finding_id": "csp",
+        "explanation": "No enforcing Content Security Policy was observed in the synthetic page's header or markup.",
+        "why_it_matters": "A Content Security Policy gives the browser rules about which resources, including scripts, the page may load. A carefully designed policy can reduce some script-injection risks, so it is useful to review this setting.",
+        "next_step": "For the site owner: list the page's required resources and evaluate a policy in report-only mode before enforcement.",
+        "limitation": "Missing this policy does not prove an exploitable flaw; application inputs and script behavior were not tested."
+      },
+      {
+        "finding_id": "http_resources",
+        "explanation": "The synthetic HTTPS page references a script using an HTTP URL.",
+        "why_it_matters": "HTTP does not encrypt that resource's transport. Browsers may block or upgrade the request, so the reference is worth correcting and checking in a real browser.",
+        "next_step": "For the site owner: replace the reference with an HTTPS resource, then verify the page still works.",
+        "limitation": "The scan does not execute the page and cannot establish what a visitor's browser actually loads."
+      },
+      {
+        "finding_id": "framing",
+        "explanation": "No supported framing restriction was observed in the synthetic response.",
+        "why_it_matters": "Framing rules let the site control which pages may embed it. Restricting unwanted embedding can help reduce deceptive overlay scenarios, while some sites intentionally support embedding.",
+        "next_step": "For the site owner: identify legitimate embedding needs before choosing a frame-ancestors policy.",
+        "limitation": "This observation does not establish actual browser behavior or the feasibility of an attack."
+      }
+    ],
+    "unassessed_finding_ids": [],
+    "validation": "Hand-authored illustration. No model was called; structure and finding references were checked.",
+    "fixture": true
+  },
+  "check_feedback": {
+    "dns": {
+      "result": "Addresses recorded",
+      "fact": "2 address observation(s) were recorded across 2 completed response(s); the same address may appear more than once.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "https_redirect": {
+      "result": "Redirects to HTTPS",
+      "fact": "The separate HTTP homepage entry point redirected to HTTPS.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "tls": {
+      "result": "Certificate verified",
+      "fact": "The final HTTPS connection passed certificate and hostname verification using TLSv1.3; other supported protocol versions were not tested.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "certificate_expiry": {
+      "result": "26725 days left",
+      "fact": "26725 days remained when checked.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "hsts": {
+      "result": "HSTS set",
+      "fact": "The HTTPS response declares a syntactically valid HSTS policy with a positive max-age; preload and parent-domain policies were not checked.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "csp": {
+      "result": "Not set",
+      "fact": "No enforcing CSP header or supported HTML meta policy was found in the complete page.",
+      "fix": "Develop an application-specific CSP, test it in report-only mode, then enforce the reviewed policy.",
+      "state": "attention"
+    },
+    "framing": {
+      "result": "Recognized policy not found",
+      "fact": "No frame-ancestors directive or recognized X-Frame-Options value was observed.",
+      "fix": "If embedding is unnecessary, restrict it with CSP frame-ancestors; otherwise allow only intended parents.",
+      "state": "attention"
+    },
+    "nosniff": {
+      "result": "nosniff set",
+      "fact": "X-Content-Type-Options is set to nosniff on this response.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "referrer": {
+      "result": "Policy declared",
+      "fact": "The selected response header declaration is strict-origin-when-cross-origin; per-request overrides were not tested.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "title": {
+      "result": "Found",
+      "fact": "A nonempty page title was found; its accuracy was not assessed.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "viewport": {
+      "result": "Found",
+      "fact": "A viewport meta declaration was found; responsive layout was not tested.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "language": {
+      "result": "Found",
+      "fact": "A nonempty document lang attribute was found; its value was not compared with the page's language.",
+      "fix": "No change needed for this check.",
+      "state": "pass"
+    },
+    "image_alt": {
+      "result": "Alt attributes missing",
+      "fact": "1 of 1 image(s) have no alt attribute; the quality of existing alternative text was not assessed.",
+      "fix": "Add descriptive alt text for meaningful images and an empty alt attribute for purely decorative images.",
+      "state": "attention"
+    },
+    "http_resources": {
+      "result": "HTTP references found",
+      "fact": "1 explicit HTTP resource reference(s) were found in inspected HTML attributes; browser upgrades or blocking were not tested.",
+      "fix": "Replace the references with working HTTPS resources or suitable relative URLs, then check the browser's network panel.",
+      "state": "attention"
+    },
+    "password_forms": {
+      "result": "No password form found",
+      "fact": "No named, enabled password form was found in the static HTML; JavaScript login flows were not inspected.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "cookie_flags": {
+      "result": "No cookies returned",
+      "fact": "This response returned no Set-Cookie fields; later pages or scripts may still set cookies.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "header_quality": {
+      "result": "No conflicts found",
+      "fact": "No reviewed value conflicts were found in X-Content-Type-Options, X-Frame-Options or CSP; header presence is reported separately.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "cors_policy": {
+      "result": "Not set",
+      "fact": "No Access-Control-Allow-Origin declaration was returned; public pages do not always need cross-origin sharing.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "response_caching": {
+      "result": "No shared-cache flag found",
+      "fact": "No recognized explicit public-sharing, private, no-store or no-cache flag was recorded; public content can still be cacheable.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "browser_isolation": {
+      "result": "Not set (optional)",
+      "fact": "No COOP, COEP, CORP or Permissions-Policy declaration was returned; these are application-dependent, optional policies.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "public_disclosures": {
+      "result": "No selected hints found",
+      "fact": "No selected software-version hints or matching server-error debug markers were recorded in this response.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    },
+    "iframe_sandbox": {
+      "result": "No iframes found",
+      "fact": "No supported iframe elements were found in the complete static HTML.",
+      "fix": "No change needed for this check.",
+      "state": "info"
+    }
+  }
+}
