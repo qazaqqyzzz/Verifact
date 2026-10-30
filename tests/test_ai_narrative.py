@@ -5,8 +5,8 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.ai import AIError, ITEM_LIMITS, explain, output_schema, prepare_messages, validate_output
-from websignal.scanner import demo_report
+from verifact.ai import AIError, ITEM_LIMITS, explain, output_schema, prepare_messages, validate_output
+from verifact.scanner import demo_report
 from tests.test_ai import answer
 
 
@@ -85,7 +85,7 @@ class NarrativeTests(unittest.TestCase):
         value["items"][0]["explanation"] = "The model incorrectly claims a strong content policy exists."
         value["items"][0]["limitation"] = "The model incorrectly claims every browser was tested."
         response = {"done": True, "message": {"content": json.dumps(value)}}
-        with patch("websignal.ai._post", return_value=response):
+        with patch("verifact.ai._post", return_value=response):
             result = explain(report, provider="ollama")
         item = result["ai"]["items"][0]
         self.assertIn("No enforcing content policy was observed", item["explanation"])
@@ -108,7 +108,7 @@ class NarrativeTests(unittest.TestCase):
             item["why_it_matters"] = "The model incorrectly infers a vulnerability."
             item["next_step"] = "The model incorrectly tells visitors to change the server."
         response = {"done": True, "message": {"content": json.dumps(value)}}
-        with patch("websignal.ai._post", return_value=response):
+        with patch("verifact.ai._post", return_value=response):
             result = explain(report, provider="ollama")
         self.assertIn("percentage is unavailable", result["ai"]["summary"])
         for item in result["ai"]["items"]:
@@ -131,7 +131,7 @@ class NarrativeTests(unittest.TestCase):
                 value["items"][0]["why_it_matters"] = "This check prevents mixed-content errors and proves support for every TLS version."
                 value["items"][0]["next_step"] = "Immediately change the university server configuration."
                 response = {"done": True, "message": {"content": json.dumps(value)}}
-                with patch("websignal.ai._post", return_value=response):
+                with patch("verifact.ai._post", return_value=response):
                     result = explain(report, provider="ollama")
                 item = result["ai"]["items"][0]
                 self.assertIn(expected, item["why_it_matters"])
@@ -154,7 +154,7 @@ class NarrativeTests(unittest.TestCase):
                 value["items"] = value["items"][:1]
                 value["items"][0]["why_it_matters"] = claim
                 response = {"done": True, "message": {"content": json.dumps(value)}}
-                with patch("websignal.ai._post", return_value=response):
+                with patch("verifact.ai._post", return_value=response):
                     result = explain(report, provider="ollama")
                 item = result["ai"]["items"][0]
                 self.assertIn("future requests during the policy lifetime", item["why_it_matters"])

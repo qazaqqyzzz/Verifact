@@ -13,12 +13,10 @@ dependencies = []
 authors = [{name = "qazaqqyzzz"}]
 
 [project.scripts]
-verifact = "websignal.cli:main"
-verify = "websignal.cli:main"
-websignal = "websignal.cli:main"
+verifact = "verifact.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["websignal*", "verify*"]
+include = ["verifact*"]
 
 [tool.setuptools.package-data]
-websignal = ["static/*.html", "static/*.css", "static/*.js", "static/fonts/*.ttf", "static/fonts/*.txt"]
+verifact = ["static/*.html", "static/*.css", "static/*.js", "static/fonts/*.ttf", "static/fonts/*.txt"]

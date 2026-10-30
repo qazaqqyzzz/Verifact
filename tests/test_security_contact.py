@@ -5,9 +5,9 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.assessment import assess
-from websignal.network import Client, Response, ScanError
-from websignal.security_contact import MAX_BYTES, MAX_LINES, PATH, inspect_security_contact, parse_security_contact
+from verifact.assessment import assess
+from verifact.network import Client, Response, ScanError
+from verifact.security_contact import MAX_BYTES, MAX_LINES, PATH, inspect_security_contact, parse_security_contact
 
 
 NOW = datetime(2026, 10, 31, 12, 0, tzinfo=timezone.utc)
@@ -179,7 +179,7 @@ class SecurityContactRequestTests(unittest.TestCase):
             self.assertEqual(inspect_security_contact(client, final(), now=NOW)["evidence"]["status"], "current")
 
     def test_parser_does_not_resolve_contacts_or_change_score(self):
-        with patch("websignal.network.resolve_public") as dns, patch("websignal.network.Client.request") as request:
+        with patch("verifact.network.resolve_public") as dns, patch("verifact.network.Client.request") as request:
             item = parse_security_contact(VALID, URL, NOW)
         dns.assert_not_called()
         request.assert_not_called()

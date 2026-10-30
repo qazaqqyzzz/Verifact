@@ -2,9 +2,9 @@
 
 import unittest
 
-from websignal.assessment import assess
-from websignal.checks import page_checks
-from websignal.network import Response, response_headers
+from verifact.assessment import assess
+from verifact.checks import page_checks
+from verifact.network import Response, response_headers
 
 
 def review(header=None, body=b"<html><head><title>Example</title></head><body></body></html>", **options):

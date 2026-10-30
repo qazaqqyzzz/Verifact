@@ -6,10 +6,10 @@ import json
 import re
 import unittest
 
-from websignal.assessment import assess
-from websignal.check_feedback import check_feedback_for_report
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.assessment import assess
+from verifact.check_feedback import check_feedback_for_report
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 def finding_card(markup, report, identifier, occurrence=0):

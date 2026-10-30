@@ -677,7 +677,7 @@
     "provider": "fixture",
     "model": "Hand-authored example",
     "generated_at": "2026-10-30T21:41:15.083233+00:00",
-    "prompt_version": "websignal-explain-4",
+    "prompt_version": "verifact-explain-4",
     "usage": {
       "input_tokens": null,
       "output_tokens": null

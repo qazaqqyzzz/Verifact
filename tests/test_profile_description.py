@@ -4,10 +4,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.checks import read_page
-from websignal.network import Response, Fetch
-from websignal.profile import PROFILE_VERSION, profile_for_report, site_profile
-from websignal.scanner import finish_report
+from verifact.checks import read_page
+from verifact.network import Response, Fetch
+from verifact.profile import PROFILE_VERSION, profile_for_report, site_profile
+from verifact.scanner import finish_report
 
 
 def page(body, host="lms.example.edu.kz", **kwargs):
@@ -95,7 +95,7 @@ class DescriptionTests(unittest.TestCase):
                   "findings": [{"id": "title", "status": "pass", "evidence": "Log in to the site | frontpage"},
                                {"id": "password_forms", "evidence": {"password_inputs": 1}}],
                   "site_profile": {"type": "Account access page", "title": "Log in to the site | frontpage", "description": ""}}
-        with patch("websignal.network.Client.fetch") as fetch:
+        with patch("verifact.network.Client.fetch") as fetch:
             result = profile_for_report(report)
             fetch.assert_not_called()
         self.assertEqual(result["type"], "University login page")
@@ -175,7 +175,7 @@ class DescriptionTests(unittest.TestCase):
                     "profile_version": "site-profile-v3", "hostname": "cedar.example.org", "https": True, "http_status": 200}
         report = {"domain": "cedar.example.org", "site_profile": existing, "findings": [],
                   "response": {"url": "https://cedar.example.org/about/", "status": 200}}
-        with patch("websignal.network.Client.fetch") as fetch:
+        with patch("verifact.network.Client.fetch") as fetch:
             upgraded = profile_for_report(report)
             fetch.assert_not_called()
         self.assertEqual(upgraded["type"], "Software & developer website")
@@ -206,7 +206,7 @@ class DescriptionTests(unittest.TestCase):
                     "hostname": "portal.example.kz", "https": True, "http_status": 200}
         report = {"domain": "portal.example.kz", "site_profile": existing, "findings": [],
                   "response": {"url": "https://portal.example.kz/", "status": 200, "body_truncated": False}}
-        with patch("websignal.network.Client.fetch") as fetch:
+        with patch("verifact.network.Client.fetch") as fetch:
             upgraded = profile_for_report(report)
             fetch.assert_not_called()
         self.assertEqual(upgraded["type"], "Education platform")

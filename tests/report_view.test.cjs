@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {visitor} = require('../websignal/static/report_view.js');
+const {visitor} = require('../verifact/static/report_view.js');
 const now = Date.parse('2026-10-31T00:00:00Z');
 const expired = '2026-10-30T23:59:59Z';
 const future = '2026-10-31T00:05:00Z';

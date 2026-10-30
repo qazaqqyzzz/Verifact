@@ -7,9 +7,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.comparison import compare_reports
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.comparison import compare_reports
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 def fixture():
@@ -244,7 +244,7 @@ class ExtendedExportTests(unittest.TestCase):
                                 "checked_at": "2026-10-30T12:00:00+00:00", "expires_at": "2026-10-30T12:05:00+00:00",
                                 "matches": [{"url": "https://example.com/listed", "threat_type": "MALWARE"}],
                                 "attribution": "Advisory provided by Google"}
-        with patch("websignal.reputation.public_result", return_value=report["reputation"]):
+        with patch("verifact.reputation.public_result", return_value=report["reputation"]):
             markup, plain = html_report(report), text_report(report)
         self.assertIn("Snapshot only", markup)
         self.assertIn("does not display a current threat warning or clearance", plain)

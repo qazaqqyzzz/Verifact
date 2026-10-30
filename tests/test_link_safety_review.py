@@ -4,9 +4,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.links import analyze_link, normalize_target
-from websignal.network import Client, Fetch, Response, ScanError
-from websignal.scanner import scan
+from verifact.links import analyze_link, normalize_target
+from verifact.network import Client, Fetch, Response, ScanError
+from verifact.scanner import scan
 
 
 def response(url, status=200, location=None):
@@ -56,8 +56,8 @@ class LinkSafetyReviewTests(unittest.TestCase):
             return first if url == first.url else original(url)
 
         with patch.object(client, "request", side_effect=request), \
-                patch("websignal.network.resolve_public", side_effect=ScanError("Blocked non-public address.", "blocked")) as resolver, \
-                patch("websignal.network.socket.socket") as socket:
+                patch("verifact.network.resolve_public", side_effect=ScanError("Blocked non-public address.", "blocked")) as resolver, \
+                patch("verifact.network.socket.socket") as socket:
             fetched = client.fetch(first.url, url_validator=normalize_target)
         resolver.assert_called_once_with("rebound.example", 443)
         socket.assert_not_called()

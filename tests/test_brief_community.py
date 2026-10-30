@@ -6,18 +6,18 @@ import unittest
 from unittest.mock import patch
 
 from tests.test_visitor_assessment import NOW, report_fixture
-from websignal.assessment import assess
-from websignal.brief import build_brief
-from websignal.scanner import community_blocked_report
-from websignal import threat_feed as feed
+from verifact.assessment import assess
+from verifact.brief import build_brief
+from verifact.scanner import community_blocked_report
+from verifact import threat_feed as feed
 
 
 class CommunityBriefTests(unittest.TestCase):
     def setUp(self):
         self.cache = feed.FeedCache()
-        clock_patch = patch("websignal.threat_feed._now", return_value=NOW)
+        clock_patch = patch("verifact.threat_feed._now", return_value=NOW)
         self.clock = clock_patch.start()
-        cache_patch = patch("websignal.threat_feed._CACHE", self.cache)
+        cache_patch = patch("verifact.threat_feed._CACHE", self.cache)
         cache_patch.start()
         self.addCleanup(clock_patch.stop)
         self.addCleanup(cache_patch.stop)

@@ -6,11 +6,11 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.assessment import assess, enrich
-from websignal.checks import certificate_expiry_presentation, transport_checks
-from websignal.network import Fetch, Response
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.assessment import assess, enrich
+from verifact.checks import certificate_expiry_presentation, transport_checks
+from verifact.network import Fetch, Response
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 CHECKED_AT = datetime(2026, 10, 31, 12, 30, 45, tzinfo=timezone.utc)
@@ -37,7 +37,7 @@ def observed_expiry(not_after):
     response = Response("https://example.com/", 200, {}, tls=tls)
     http = Fetch(response, [{"url": "http://example.com/", "status": 301},
                             {"url": response.url, "status": 200}])
-    with patch("websignal.checks.datetime", FixedClock):
+    with patch("verifact.checks.datetime", FixedClock):
         findings = transport_checks(http, Fetch(response))
     return next(item for item in findings if item["id"] == "certificate_expiry")
 
@@ -134,7 +134,7 @@ class CertificateSnapshotTests(unittest.TestCase):
         report = legacy_report()
         original = deepcopy(report)
         expected_score = assess(report)
-        with patch("websignal.checks.datetime", SnapshotClock):
+        with patch("verifact.checks.datetime", SnapshotClock):
             updated = enrich(report)
         item = certificate_finding(updated)
         self.assertEqual(item["evidence"], certificate_finding(original)["evidence"])
@@ -156,7 +156,7 @@ class CertificateSnapshotTests(unittest.TestCase):
     def test_text_and_html_exports_explain_actual_days_and_json_keeps_raw_evidence(self):
         report = legacy_report()
         original = deepcopy(report)
-        with patch("websignal.checks.datetime", SnapshotClock):
+        with patch("verifact.checks.datetime", SnapshotClock):
             plain = text_report(report)
             markup = html_report(report)
             exported = json.loads(render(report, "json"))

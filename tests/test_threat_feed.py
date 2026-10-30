@@ -8,8 +8,8 @@ from threading import Event, Thread
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.network import Fetch, Response
-from websignal import threat_feed as feed
+from verifact.network import Fetch, Response
+from verifact import threat_feed as feed
 
 
 NOW = datetime(2026, 10, 31, 12, tzinfo=timezone.utc)
@@ -38,7 +38,7 @@ class FeedParsingTests(unittest.TestCase):
 
     def test_download_uses_only_fixed_feed_with_separate_request_and_size_bounds(self):
         response = Response(feed.FEED_URL, 200, {"content-type": "text/plain"}, b"listed.example.com\n")
-        with patch("websignal.threat_feed.Client") as factory:
+        with patch("verifact.threat_feed.Client") as factory:
             factory.return_value.fetch.return_value = Fetch(response)
             raw = feed._download_bytes()
         factory.assert_called_once_with(timeout=8, max_bytes=feed.MAX_FEED_BYTES, max_redirects=0, max_requests=1)
@@ -52,7 +52,7 @@ class FeedParsingTests(unittest.TestCase):
                  Response(feed.FEED_URL, 200, {"content-type": "text/html"}, b"listed.example.com"),
                  Response(feed.FEED_URL, 200, {"content-encoding": "gzip"}, b"listed.example.com")]
         for response in cases:
-            with self.subTest(response=response), patch("websignal.threat_feed.Client") as factory:
+            with self.subTest(response=response), patch("verifact.threat_feed.Client") as factory:
                 factory.return_value.fetch.return_value = Fetch(response)
                 with self.assertRaises(ValueError):
                     feed._download_bytes()
@@ -62,11 +62,11 @@ class FeedDeadlineTests(unittest.TestCase):
     def test_fixed_worker_has_total_deadline_and_neither_key_nor_target_input(self):
         completed = Mock(returncode=0, stdout=b"listed.example.com\n")
         with patch.dict("os.environ", {"OPENAI_API_KEY": "private-openai-key", "GOOGLE_SAFE_BROWSING_API_KEY": "private-google-key"}), \
-                patch("websignal.threat_feed.subprocess.run", return_value=completed) as run:
+                patch("verifact.threat_feed.subprocess.run", return_value=completed) as run:
             result = feed._download(NOW)
         command = run.call_args.args[0]
         options = run.call_args.kwargs
-        self.assertEqual(command, [sys.executable, "-m", "websignal.threat_feed", "--download-worker"])
+        self.assertEqual(command, [sys.executable, "-m", "verifact.threat_feed", "--download-worker"])
         self.assertEqual(options["timeout"], 12)
         self.assertEqual(options["stdin"], subprocess.DEVNULL)
         self.assertEqual(options["stdout"], subprocess.PIPE)
@@ -80,11 +80,11 @@ class FeedDeadlineTests(unittest.TestCase):
     def test_unsuccessful_oversized_and_malformed_worker_output_cannot_publish(self):
         for completed in (Mock(returncode=1, stdout=b"listed.example.com\n"),
                           Mock(returncode=0, stdout=None), Mock(returncode=0, stdout=b"<html>error</html>")):
-            with self.subTest(completed=completed), patch("websignal.threat_feed.subprocess.run", return_value=completed), \
+            with self.subTest(completed=completed), patch("verifact.threat_feed.subprocess.run", return_value=completed), \
                     self.assertRaises(ValueError):
                 feed._download(NOW)
         with patch.object(feed, "MAX_FEED_BYTES", 3), \
-                patch("websignal.threat_feed.subprocess.run", return_value=Mock(returncode=0, stdout=b"abcd")), \
+                patch("verifact.threat_feed.subprocess.run", return_value=Mock(returncode=0, stdout=b"abcd")), \
                 self.assertRaises(ValueError):
             feed._download(NOW)
 
@@ -103,8 +103,8 @@ class FeedDeadlineTests(unittest.TestCase):
             return actual_run([sys.executable, "-c", "import time; print('listed.example.com', flush=True); time.sleep(30)"], **kwargs)
 
         cache = feed.FeedCache()
-        with patch.object(feed, "DOWNLOAD_TIMEOUT", 0.15), patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed.subprocess.run", side_effect=stalled_worker) as run, \
+        with patch.object(feed, "DOWNLOAD_TIMEOUT", 0.15), patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed.subprocess.run", side_effect=stalled_worker) as run, \
                 patch("subprocess.Popen", side_effect=tracked_popen):
             first = feed.inspect_urls(["https://listed.example.com/"], cache=cache)
             second = feed.inspect_urls(["https://example.com/"], cache=cache)
@@ -120,15 +120,15 @@ class FeedDeadlineTests(unittest.TestCase):
     def test_worker_writes_only_bounded_body_and_no_error_details(self):
         for raw, expected in ((b"example.com\n", 0), (b"", 1), (b"x" * 33, 1)):
             with self.subTest(raw=raw), patch.object(feed, "MAX_FEED_BYTES", 32), \
-                    patch("websignal.threat_feed._download_bytes", return_value=raw), \
-                    patch("websignal.threat_feed.sys.stdout") as stdout:
+                    patch("verifact.threat_feed._download_bytes", return_value=raw), \
+                    patch("verifact.threat_feed.sys.stdout") as stdout:
                 self.assertEqual(feed._download_worker(), expected)
                 if expected == 0:
                     stdout.buffer.write.assert_called_once_with(raw)
                 else:
                     stdout.buffer.write.assert_not_called()
-        with patch("websignal.threat_feed._download_bytes", side_effect=OSError("private provider error")), \
-                patch("websignal.threat_feed.sys.stdout") as stdout:
+        with patch("verifact.threat_feed._download_bytes", side_effect=OSError("private provider error")), \
+                patch("verifact.threat_feed.sys.stdout") as stdout:
             self.assertEqual(feed._download_worker(), 1)
             stdout.buffer.write.assert_not_called()
 
@@ -149,8 +149,8 @@ class FeedMatchingTests(unittest.TestCase):
 
     def test_url_paths_queries_are_not_saved_or_submitted_to_the_feed(self):
         cache = feed.FeedCache()
-        with patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed._download", return_value=snapshot()) as download:
+        with patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed._download", return_value=snapshot()) as download:
             result = feed.inspect_urls(["https://example.com/private?q=search-phrase", "https://example.com/other"], cache=cache)
         download.assert_called_once_with(NOW)
         self.assertEqual(result["status"], "no_match")
@@ -159,12 +159,12 @@ class FeedMatchingTests(unittest.TestCase):
         self.assertNotIn("search-phrase", repr(result))
 
     def test_disabled_invalid_and_failed_checks_never_become_no_match(self):
-        with patch("websignal.threat_feed._download") as download:
+        with patch("verifact.threat_feed._download") as download:
             self.assertEqual(feed.inspect_urls(["https://example.com/"], enabled=False)["status"], "not_checked")
             self.assertEqual(feed.inspect_urls(["http://127.0.0.1/"])["status"], "unavailable")
             download.assert_not_called()
-        with patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed._download", side_effect=OSError("offline")):
+        with patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed._download", side_effect=OSError("offline")):
             self.assertEqual(feed.inspect_urls(["https://example.com/"], cache=feed.FeedCache())["status"], "unavailable")
 
     def test_stale_and_future_snapshots_cannot_issue_matches_or_clean_results(self):
@@ -186,8 +186,8 @@ class FeedCacheTests(unittest.TestCase):
             release.wait(2)
             return snapshot(when=now)
 
-        with patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed._download", side_effect=delayed_download) as download:
+        with patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed._download", side_effect=delayed_download) as download:
             worker = Thread(target=cache.get, daemon=True)
             worker.start()
             try:
@@ -206,14 +206,14 @@ class FeedCacheTests(unittest.TestCase):
     def test_fresh_cache_is_reused_and_expired_refresh_replaces_removed_domains(self):
         cache = feed.FeedCache()
         later = NOW + timedelta(seconds=301)
-        with patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed._download", return_value=snapshot()) as download:
+        with patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed._download", return_value=snapshot()) as download:
             first = feed.inspect_urls(["https://listed.example.com/"], cache=cache)
             second = feed.inspect_urls(["https://other.example.com/"], cache=cache)
         self.assertEqual(download.call_count, 1)
         self.assertEqual((first["status"], second["status"]), ("listed", "no_match"))
-        with patch("websignal.threat_feed._now", return_value=later), \
-                patch("websignal.threat_feed._download", return_value=snapshot(("new.example.com",), later)) as refresh:
+        with patch("verifact.threat_feed._now", return_value=later), \
+                patch("verifact.threat_feed._download", return_value=snapshot(("new.example.com",), later)) as refresh:
             changed = feed.inspect_urls(["https://listed.example.com/"], cache=cache)
         refresh.assert_called_once_with(later)
         self.assertEqual(changed["status"], "no_match")
@@ -223,8 +223,8 @@ class FeedCacheTests(unittest.TestCase):
         cache = feed.FeedCache()
         cache.snapshot = snapshot()
         later = NOW + timedelta(seconds=301)
-        with patch("websignal.threat_feed._now", return_value=later), \
-                patch("websignal.threat_feed._download", side_effect=ValueError("bad feed")) as download:
+        with patch("verifact.threat_feed._now", return_value=later), \
+                patch("verifact.threat_feed._download", side_effect=ValueError("bad feed")) as download:
             first = feed.inspect_urls(["https://listed.example.com/"], cache=cache)
             second = feed.inspect_urls(["https://example.com/"], cache=cache)
         self.assertEqual(download.call_count, 1)
@@ -261,8 +261,8 @@ class FeedCacheTests(unittest.TestCase):
         later = NOW + timedelta(seconds=30)
         cache = feed.FeedCache()
         cache.snapshot = snapshot(("other.example.com",), later)
-        with patch("websignal.threat_feed._CACHE", cache), patch("websignal.threat_feed._now", return_value=later), \
-                patch("websignal.threat_feed._download") as download:
+        with patch("verifact.threat_feed._CACHE", cache), patch("verifact.threat_feed._now", return_value=later), \
+                patch("verifact.threat_feed._download") as download:
             result = feed.community_for_report({"community_reputation": old})
         self.assertEqual(result["status"], "no_match")
         self.assertEqual(result["fetched_at"], later.isoformat())

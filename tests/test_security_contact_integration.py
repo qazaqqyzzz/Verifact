@@ -6,11 +6,11 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.cli import main
-from websignal.network import Client, Response
-from websignal.scanner import demo_report, scan
-from websignal.server import AppState, WebError, run_scan
-from websignal import threat_feed as feed
+from verifact.cli import main
+from verifact.network import Client, Response
+from verifact.scanner import demo_report, scan
+from verifact.server import AppState, WebError, run_scan
+from verifact import threat_feed as feed
 from tests.test_visitor_assessment import NOW
 
 
@@ -68,10 +68,10 @@ class SecurityContactIntegrationTests(unittest.TestCase):
 
     def test_preflight_listed_host_skips_contact_along_with_all_target_requests(self):
         snapshot = feed.FeedSnapshot(frozenset({"example.com"}), NOW, NOW + timedelta(minutes=5))
-        with patch("websignal.threat_feed._CACHE", feed.FeedCache()), \
-                patch("websignal.threat_feed._now", return_value=NOW), \
-                patch("websignal.threat_feed._download", return_value=snapshot), \
-                patch("websignal.scanner.Client") as client:
+        with patch("verifact.threat_feed._CACHE", feed.FeedCache()), \
+                patch("verifact.threat_feed._now", return_value=NOW), \
+                patch("verifact.threat_feed._download", return_value=snapshot), \
+                patch("verifact.scanner.Client") as client:
             report = scan(TARGET, community_check=True, security_contact=True)
         client.assert_not_called()
         self.assertTrue(report["inspection_skipped"])
@@ -82,11 +82,11 @@ class SecurityContactIntegrationTests(unittest.TestCase):
 
     def test_server_forwards_explicit_option_and_rejects_nonboolean_values(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             job = state.start_scan(TARGET, rdap=False, community_check=False, security_contact=True)
             args = thread.call_args.kwargs["args"]
         self.assertTrue(args[5])
-        with patch("websignal.server.run_scan", return_value=demo_report()) as runner:
+        with patch("verifact.server.run_scan", return_value=demo_report()) as runner:
             state._scan_worker(*args)
         runner.assert_called_once_with(TARGET, False, None, security_contact=True)
         self.assertEqual(state.job(job["id"])["status"], "complete")
@@ -96,7 +96,7 @@ class SecurityContactIntegrationTests(unittest.TestCase):
 
     def test_subprocess_adds_only_explicit_security_contact_flag(self):
         completed = Mock(returncode=0, stdout=json.dumps(demo_report()).encode())
-        with patch("websignal.server.subprocess.run", return_value=completed) as runner:
+        with patch("verifact.server.subprocess.run", return_value=completed) as runner:
             run_scan(TARGET, False, security_contact=True)
         command = runner.call_args.args[0]
         self.assertIn("--security-contact", command)
@@ -105,7 +105,7 @@ class SecurityContactIntegrationTests(unittest.TestCase):
         self.assertEqual(runner.call_args.kwargs["input"], TARGET.encode())
 
     def test_cli_flag_forwards_option_without_enabling_other_optional_requests(self):
-        with patch("websignal.cli.scan", return_value=demo_report()) as scanner, \
+        with patch("verifact.cli.scan", return_value=demo_report()) as scanner, \
                 patch("sys.stdout", new_callable=io.StringIO), patch("sys.stderr", new_callable=io.StringIO):
             code = main(["scan", TARGET, "--security-contact", "--format", "json"])
         self.assertIn(code, (0, 1))

@@ -54,7 +54,7 @@ function safeDisplayURL(value) {
 function renderVisitor(report) {
   clearTimeout(state.visitorExpiryTimer);
   const value = report.visitor_assessment;
-  const assessment = VerifyReportView.visitor(report);
+  const assessment = VerifactReportView.visitor(report);
   const profile = report.site_profile || {};
   const tone = ({orange:"amber",gray:"unknown"})[assessment.tone] || toneName(assessment.tone);
   $("visitor-card").className = "visitor-card tone-" + tone;
@@ -112,7 +112,7 @@ async function api(path, data) {
     if (!state.config) throw new Error("The local app is not ready yet. Refresh and try again.");
     options.method = "POST";
     options.headers["Content-Type"] = "application/json";
-    options.headers["X-WebSignal-Token"] = state.config.csrf_token;
+    options.headers["X-Verifact-Token"] = state.config.csrf_token;
     options.body = JSON.stringify(data);
   }
   let response;
@@ -990,7 +990,7 @@ $("copy-summary").addEventListener("click", async () => {
   const rep = report.reputation;
   const expired = rep?.expires_at && new Date(rep.expires_at).getTime() <= Date.now();
   const status = expired ? "unavailable (expired)" : rep?.status || "not checked";
-  const visitor = VerifyReportView.visitor(report);
+  const visitor = VerifactReportView.visitor(report);
   const lines = state.mode === "simple" ? ["Verifact · " + target, "Checked: " + dateText(report.created_at), "Link check: " + visitor.label, ...(visitor.reasons || []).slice(0,3).map((item) => "• " + item.title + ": " + item.detail), "Next: " + visitor.next_action, "A snapshot of basic checks. New scams can be missed."] : ["Verifact · " + target, "Checked: " + dateText(report.created_at), "Security setup: " + scoreText, "Review items: " + reviews.length, ...reviews.slice(0,3).map((item) => "• " + item.title + ": " + (report.check_feedback?.[item.finding_id]?.fact || item.why) + " Fix: " + (report.check_feedback?.[item.finding_id]?.fix || item.action)), "Optional Google lookup: " + status, "Public configuration checks, not a safety guarantee."];
   const text = lines.join("\n");
   $("copy-text").value = text;

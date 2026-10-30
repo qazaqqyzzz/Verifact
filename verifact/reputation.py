@@ -203,7 +203,7 @@ def _lookup(prepared, api_key, timeout):
             raise ReputationError("The local reputation cache is full. Wait for earlier lookups to expire before checking more links.")
         checked_at = current
         if pending:
-            payload = {"client": {"clientId": "websignal", "clientVersion": __version__},
+            payload = {"client": {"clientId": "verifact", "clientVersion": __version__},
                        "threatInfo": {"threatTypes": list(THREAT_TYPES), "platformTypes": ["ANY_PLATFORM"],
                                       "threatEntryTypes": ["URL"], "threatEntries": [{"url": url} for url in pending]}}
             result = _parse(_post(payload, api_key, timeout), pending, checked_at)

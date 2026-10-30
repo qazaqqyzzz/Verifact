@@ -8,9 +8,9 @@ import threading
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.ai import AIError, PROMPT_VERSION
-from websignal.scanner import demo_report
-from websignal.server import AppServer, AppState, WebError, run_scan, target_domain
+from verifact.ai import AIError, PROMPT_VERSION
+from verifact.scanner import demo_report
+from verifact.server import AppServer, AppState, WebError, run_scan, target_domain
 
 
 FAKE_KEY = "test-key-only-not-a-real-api-credential"
@@ -30,9 +30,9 @@ def live_fixture():
 
 
 def completed_job(state):
-    with patch("websignal.server.threading.Thread"):
+    with patch("verifact.server.threading.Thread"):
         job = state.start_scan(PUBLIC_TARGET, rdap=False)
-    with patch("websignal.server.run_scan", return_value=live_fixture()):
+    with patch("verifact.server.run_scan", return_value=live_fixture()):
         state._scan_worker(job["id"], PUBLIC_TARGET, False)
     return state.job(job["id"])
 
@@ -66,8 +66,8 @@ class TargetInputTests(unittest.TestCase):
         response = Mock(returncode=0, stdout=json.dumps(live_fixture()).encode())
         with patch.dict("os.environ", {"OPENAI_API_KEY": FAKE_KEY,
                                       "GOOGLE_SAFE_BROWSING_API_KEY": FAKE_REPUTATION_KEY,
-                                      "WEBSIGNAL_TEST_PUBLIC_SETTING": "kept"}), \
-                patch("websignal.server.subprocess.run", return_value=response) as runner:
+                                      "VERIFACT_TEST_PUBLIC_SETTING": "kept"}), \
+                patch("verifact.server.subprocess.run", return_value=response) as runner:
             report = run_scan(PUBLIC_TARGET, True, "example.com")
         self.assertEqual(report["target_url"], PUBLIC_TARGET)
         args, kwargs = runner.call_args
@@ -76,13 +76,13 @@ class TargetInputTests(unittest.TestCase):
         self.assertEqual(kwargs["input"], PUBLIC_TARGET.encode())
         self.assertNotIn("OPENAI_API_KEY", kwargs["env"])
         self.assertNotIn("GOOGLE_SAFE_BROWSING_API_KEY", kwargs["env"])
-        self.assertEqual(kwargs["env"]["WEBSIGNAL_TEST_PUBLIC_SETTING"], "kept")
+        self.assertEqual(kwargs["env"]["VERIFACT_TEST_PUBLIC_SETTING"], "kept")
         self.assertEqual(kwargs["timeout"], 90)
         self.assertEqual(args[0][-3:], ["--expected-domain", "example.com", "--rdap"])
 
     def test_scan_keeps_exact_url_and_expected_domain(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread") as worker:
+        with patch("verifact.server.threading.Thread") as worker:
             job = state.start_scan(PUBLIC_TARGET + "#section", rdap=False, expected_domain="EXAMPLE.COM")
         self.assertEqual(job["domain"], "example.com")
         self.assertEqual(job["target_url"], PUBLIC_TARGET)
@@ -90,7 +90,7 @@ class TargetInputTests(unittest.TestCase):
 
     def test_sensitive_links_stop_before_worker_creation(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread") as worker:
+        with patch("verifact.server.threading.Thread") as worker:
             for target in ["https://example.com/login?token=private", "https://example.com/reset-password/private"]:
                 with self.subTest(target=target), self.assertRaises(WebError):
                     state.start_scan(target)
@@ -99,14 +99,14 @@ class TargetInputTests(unittest.TestCase):
 
     def test_expected_domain_rejects_falsey_nonstring_values(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread") as worker:
+        with patch("verifact.server.threading.Thread") as worker:
             for expected in [False, 0, [], {}, 12, "https://example.com/", "example.com/path"]:
                 with self.subTest(expected=expected), self.assertRaises(WebError):
                     state.start_scan(PUBLIC_TARGET, expected_domain=expected)
         worker.assert_not_called()
         self.assertEqual(state.jobs, {})
         for blank in [None, "", "   "]:
-            with self.subTest(blank=blank), patch("websignal.server.threading.Thread") as worker:
+            with self.subTest(blank=blank), patch("verifact.server.threading.Thread") as worker:
                 state = AppState()
                 job = state.start_scan(PUBLIC_TARGET, expected_domain=blank)
                 self.assertIsNone(worker.call_args.kwargs["args"][3])
@@ -116,7 +116,7 @@ class TargetInputTests(unittest.TestCase):
 class AppStateTests(unittest.TestCase):
     def test_scan_lifecycle_and_parallel_scan_rejection(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             job = state.start_scan("https://example.com/path", rdap=False)
             self.assertEqual(job["status"], "running")
             self.assertTrue(state.scan_busy)
@@ -125,7 +125,7 @@ class AppStateTests(unittest.TestCase):
             self.assertEqual(failure.exception.status, 409)
             thread.assert_called_once()
             thread.return_value.start.assert_called_once()
-        with patch("websignal.server.run_scan", return_value=live_fixture()) as scan:
+        with patch("verifact.server.run_scan", return_value=live_fixture()) as scan:
             state._scan_worker(job["id"], "example.com", False)
         scan.assert_called_once_with("example.com", False)
         self.assertFalse(state.scan_busy)
@@ -136,9 +136,9 @@ class AppStateTests(unittest.TestCase):
 
     def test_failed_scan_unlocks_next_attempt(self):
         state = AppState()
-        with patch("websignal.server.threading.Thread"):
+        with patch("verifact.server.threading.Thread"):
             job = state.start_scan("example.com")
-        with patch("websignal.server.run_scan", side_effect=WebError("Timed out")):
+        with patch("verifact.server.run_scan", side_effect=WebError("Timed out")):
             state._scan_worker(job["id"], "example.com", True)
         self.assertEqual(state.job(job["id"])["error"], "Timed out")
         self.assertEqual(state.job(job["id"])["status"], "failed")
@@ -148,8 +148,8 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_settings({"provider": "openai"})
         job = completed_job(state)
-        with patch.dict("os.environ", {}, clear=True), patch("websignal.server.threading.Thread") as thread, \
-                patch("websignal.server.explain") as explain:
+        with patch.dict("os.environ", {}, clear=True), patch("verifact.server.threading.Thread") as thread, \
+                patch("verifact.server.explain") as explain:
             with self.assertRaisesRegex(WebError, "API key"):
                 state.start_ai(job["id"])
         thread.assert_not_called()
@@ -162,17 +162,17 @@ class AppStateTests(unittest.TestCase):
         job = completed_job(state)
         enriched = deepcopy(job["report"])
         enriched["ai"] = {"fixture": False, "items": []}
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             first = state.start_ai(job["id"])
             second = state.start_ai(job["id"])
             self.assertEqual(first["ai_status"], "running")
             self.assertEqual(second["ai_status"], "running")
             thread.assert_called_once()
-        with patch("websignal.server.explain", return_value=enriched) as explain:
+        with patch("verifact.server.explain", return_value=enriched) as explain:
             state._ai_worker(job["id"], job["report"], FAKE_KEY)
         explain.assert_called_once_with(job["report"], provider="openai", api_key=FAKE_KEY, timeout=60)
         self.assertFalse(state.ai_busy)
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             cached = state.start_ai(job["id"])
         thread.assert_not_called()
         self.assertEqual(cached["ai_status"], "complete")
@@ -182,9 +182,9 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_key(FAKE_KEY)
         job = completed_job(state)
-        with patch("websignal.server.threading.Thread"):
+        with patch("verifact.server.threading.Thread"):
             state.start_ai(job["id"])
-        with patch("websignal.server.explain", side_effect=AIError("Provider quota unavailable")):
+        with patch("verifact.server.explain", side_effect=AIError("Provider quota unavailable")):
             state._ai_worker(job["id"], job["report"], FAKE_KEY)
         failed = state.job(job["id"])
         self.assertEqual(failed["report"], job["report"])
@@ -198,7 +198,7 @@ class AppStateTests(unittest.TestCase):
         state.set_settings({"provider": "ollama"})
         job = cached_ai_job(state, PROMPT_VERSION)
         self.assertEqual(state.config()["ai_prompt_version"], PROMPT_VERSION)
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             for refresh in (False, True, True):
                 cached = state.start_ai(job["id"], refresh=refresh)
                 self.assertEqual(cached["report"]["ai"], job["report"]["ai"])
@@ -209,7 +209,7 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_settings({"provider": "ollama"})
         job = cached_ai_job(state, "older-prompt-version")
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             self.assertEqual(state.start_ai(job["id"])["ai_status"], "complete")
             thread.assert_not_called()
             first = state.start_ai(job["id"], refresh=True)
@@ -222,11 +222,11 @@ class AppStateTests(unittest.TestCase):
         updated = deepcopy(job["report"])
         updated["ai"]["prompt_version"] = PROMPT_VERSION
         updated["ai"]["summary"] = "A newly generated explanation."
-        with patch("websignal.server.explain", return_value=updated) as explain:
+        with patch("verifact.server.explain", return_value=updated) as explain:
             state._ai_worker(*worker_args)
         explain.assert_called_once()
         self.assertEqual(state.job(job["id"])["report"]["ai"]["prompt_version"], PROMPT_VERSION)
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             state.start_ai(job["id"], refresh=True)
         thread.assert_not_called()
 
@@ -234,17 +234,17 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_settings({"provider": "ollama"})
         job = cached_ai_job(state, "older-prompt-version")
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             state.start_ai(job["id"], refresh=True)
             worker_args = thread.call_args.kwargs["args"]
-        with patch("websignal.server.explain", side_effect=AIError("Local model unavailable")):
+        with patch("verifact.server.explain", side_effect=AIError("Local model unavailable")):
             state._ai_worker(*worker_args)
         failed = state.job(job["id"])
         self.assertEqual(failed["report"], job["report"])
         self.assertEqual(failed["ai_status"], "failed")
         self.assertEqual(failed["ai_error"], "Local model unavailable")
         self.assertFalse(state.ai_busy)
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             state.start_ai(job["id"])
             thread.assert_not_called()
             state.start_ai(job["id"], refresh=True)
@@ -254,7 +254,7 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_settings({"provider": "ollama"})
         job = cached_ai_job(state, "older-prompt-version")
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             for refresh in ("true", 1, None, [], {}):
                 with self.subTest(refresh=refresh), self.assertRaises(WebError):
                     state.start_ai(job["id"], refresh=refresh)
@@ -267,7 +267,7 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_key(FAKE_KEY)
         job = state.demo()
-        with patch("websignal.server.explain") as explain, self.assertRaises(WebError):
+        with patch("verifact.server.explain") as explain, self.assertRaises(WebError):
             state.start_ai(job["id"])
         explain.assert_not_called()
 
@@ -285,7 +285,7 @@ class AppStateTests(unittest.TestCase):
 
     def test_history_is_bounded_and_unknown_id_fails(self):
         state = AppState()
-        with patch("websignal.server.MAX_JOBS", 2):
+        with patch("verifact.server.MAX_JOBS", 2):
             first = state.demo()
             state.demo()
             state.demo()
@@ -303,7 +303,7 @@ class AppStateTests(unittest.TestCase):
             self.assertEqual(config["key_source"], "environment")
             self.assertNotIn(FAKE_KEY, json.dumps(config))
             job = completed_job(state)
-            with patch("websignal.server.threading.Thread") as thread, self.assertRaisesRegex(WebError, "Built-in"):
+            with patch("verifact.server.threading.Thread") as thread, self.assertRaisesRegex(WebError, "Built-in"):
                 state.start_ai(job["id"])
             thread.assert_not_called()
             preview = state.preview_report(job["report"])
@@ -315,14 +315,14 @@ class AppStateTests(unittest.TestCase):
         state.set_key(FAKE_KEY)
         state.set_settings({"provider": "ollama"})
         job = completed_job(state)
-        with patch("websignal.server.threading.Thread") as thread:
+        with patch("verifact.server.threading.Thread") as thread:
             state.start_ai(job["id"])
             args = thread.call_args.kwargs["args"]
         self.assertIsNone(args[2])
         self.assertEqual(args[3], "ollama")
         self.assertEqual(state.job(job["id"])["ai_provider"], "ollama")
         state.set_settings({"provider": "openai"})
-        with patch("websignal.server.explain", return_value=job["report"]) as explain:
+        with patch("verifact.server.explain", return_value=job["report"]) as explain:
             state._ai_worker(*args)
         explain.assert_called_once_with(job["report"], provider="ollama", api_key=None, timeout=120)
 
@@ -346,7 +346,7 @@ class AppStateTests(unittest.TestCase):
     def test_local_preview_is_local_and_makes_no_request(self):
         state = AppState()
         state.set_settings({"provider": "ollama"})
-        with patch("websignal.server.explain") as explain:
+        with patch("verifact.server.explain") as explain:
             preview = state.preview_report(live_fixture())
         explain.assert_not_called()
         self.assertEqual(preview["provider"], "ollama")
@@ -354,7 +354,7 @@ class AppStateTests(unittest.TestCase):
 
     def test_reputation_settings_are_optional_private_and_atomic(self):
         state = AppState()
-        with patch.dict("os.environ", {}, clear=True), patch("websignal.server.inspect_urls") as lookup:
+        with patch.dict("os.environ", {}, clear=True), patch("verifact.server.inspect_urls") as lookup:
             self.assertFalse(state.config()["reputation_configured"])
             configured = state.set_settings({"api_key": FAKE_KEY, "reputation_key": FAKE_REPUTATION_KEY})
             self.assertEqual(configured["reputation_key_source"], "session")
@@ -373,7 +373,7 @@ class AppStateTests(unittest.TestCase):
 
     def test_environment_reputation_key_never_triggers_an_automatic_lookup(self):
         with patch.dict("os.environ", {"GOOGLE_SAFE_BROWSING_API_KEY": FAKE_REPUTATION_KEY}), \
-                patch("websignal.server.inspect_urls") as lookup:
+                patch("verifact.server.inspect_urls") as lookup:
             state = AppState()
             config = state.config()
             self.assertTrue(config["reputation_configured"])
@@ -387,7 +387,7 @@ class AppStateTests(unittest.TestCase):
     def test_reputation_requires_explicit_boolean_consent_key_and_live_report(self):
         state = AppState()
         job = completed_job(state)
-        with patch.dict("os.environ", {}, clear=True), patch("websignal.server.threading.Thread") as worker:
+        with patch.dict("os.environ", {}, clear=True), patch("verifact.server.threading.Thread") as worker:
             for consent in [False, None, 1, "true", [], {}]:
                 with self.subTest(consent=consent), self.assertRaisesRegex(WebError, "Confirm sending"):
                     state.start_reputation(job["id"], consent=consent)
@@ -405,7 +405,7 @@ class AppStateTests(unittest.TestCase):
         state.set_settings({"reputation_key": FAKE_REPUTATION_KEY})
         job = completed_job(state)
         other = completed_job(state)
-        with patch("websignal.server.threading.Thread") as worker:
+        with patch("verifact.server.threading.Thread") as worker:
             self.assertEqual(state.start_reputation(job["id"], True)["reputation_status"], "running")
             self.assertEqual(state.start_reputation(job["id"], True)["reputation_status"], "running")
             with self.assertRaises(WebError) as failure:
@@ -421,7 +421,7 @@ class AppStateTests(unittest.TestCase):
         final = "https://other.example.com/result?item=7"
         state.jobs[job["id"]]["report"]["link_analysis"].update(
             redirects=[{"url": PUBLIC_TARGET, "status": 302}, {"url": final, "status": 200}], final_url=final)
-        with patch("websignal.server.threading.Thread") as worker:
+        with patch("verifact.server.threading.Thread") as worker:
             state.start_reputation(job["id"], consent=True)
         self.assertEqual(worker.call_args.kwargs["args"][1], [PUBLIC_TARGET, final])
 
@@ -435,11 +435,11 @@ class AppStateTests(unittest.TestCase):
                 ai_result = {**initial, "ai": {"provider": "ollama", "summary": "Test explanation", "items": []}}
                 reputation = {"provider": "Google Safe Browsing", "status": "no_match", "checked_count": 1,
                               "checked_at": "2026-10-30T12:00:00+00:00", "matches": [], "detail": "No known match."}
-                with patch("websignal.server.threading.Thread"):
+                with patch("verifact.server.threading.Thread"):
                     state.start_ai(job["id"])
                     state.start_reputation(job["id"], True)
-                with patch("websignal.server.explain", return_value=ai_result) as explain, \
-                        patch("websignal.server.inspect_urls", return_value=reputation) as lookup:
+                with patch("verifact.server.explain", return_value=ai_result) as explain, \
+                        patch("verifact.server.inspect_urls", return_value=reputation) as lookup:
                     ai_work = lambda: state._ai_worker(job["id"], initial, None, "ollama")
                     reputation_work = lambda: state._reputation_worker(job["id"], [PUBLIC_TARGET], FAKE_REPUTATION_KEY)
                     first, second = (reputation_work, ai_work) if reputation_first else (ai_work, reputation_work)
@@ -461,9 +461,9 @@ class AppStateTests(unittest.TestCase):
         state = AppState()
         state.set_settings({"reputation_key": FAKE_REPUTATION_KEY})
         job = completed_job(state)
-        with patch("websignal.server.threading.Thread"):
+        with patch("verifact.server.threading.Thread"):
             state.start_reputation(job["id"], True)
-        with patch("websignal.server.inspect_urls", side_effect=RuntimeError(FAKE_REPUTATION_KEY)):
+        with patch("verifact.server.inspect_urls", side_effect=RuntimeError(FAKE_REPUTATION_KEY)):
             state._reputation_worker(job["id"], [PUBLIC_TARGET], FAKE_REPUTATION_KEY)
         result = state.job(job["id"])
         self.assertEqual(result["report"]["reputation"]["status"], "unavailable")
@@ -474,10 +474,10 @@ class AppStateTests(unittest.TestCase):
     def test_history_does_not_evict_a_pending_reputation_worker(self):
         state = AppState()
         state.set_settings({"reputation_key": FAKE_REPUTATION_KEY})
-        with patch("websignal.server.MAX_JOBS", 2):
+        with patch("verifact.server.MAX_JOBS", 2):
             pending = completed_job(state)
             disposable = completed_job(state)
-            with patch("websignal.server.threading.Thread"):
+            with patch("verifact.server.threading.Thread"):
                 state.start_reputation(pending["id"], True)
             fresh = state.demo()
         self.assertIn(pending["id"], state.jobs)
@@ -490,8 +490,8 @@ class AppStateTests(unittest.TestCase):
         previous = deepcopy(job["report"])
         previous["created_at"] = "2026-01-01T00:00:00+00:00"
         next(item for item in previous["findings"] if item["id"] == "hsts")["status"] = "attention"
-        with patch("websignal.server.run_scan") as scanner, patch("websignal.server.inspect_urls") as lookup, \
-                patch("websignal.server.explain") as explain:
+        with patch("verifact.server.run_scan") as scanner, patch("verifact.server.inspect_urls") as lookup, \
+                patch("verifact.server.explain") as explain:
             compared = state.compare(job["id"], previous)
         self.assertTrue(compared["report"]["comparison"]["available"])
         self.assertIn("hsts", [change["id"] for change in compared["report"]["comparison"]["changes"]])
@@ -536,10 +536,10 @@ class AppStateTests(unittest.TestCase):
             "checked_count": 1, "expires_at": (now + timedelta(minutes=5)).isoformat(),
             "matches": [{"url": PUBLIC_TARGET, "threat_type": "MALWARE", "label": "Potential malware"}],
         }
-        with patch("websignal.server.inspect_urls") as lookup:
-            with patch("websignal.reputation._now", return_value=now):
+        with patch("verifact.server.inspect_urls") as lookup:
+            with patch("verifact.reputation._now", return_value=now):
                 fresh = state.job(job["id"])["report"]
-            with patch("websignal.reputation._now", return_value=now + timedelta(minutes=6)):
+            with patch("verifact.reputation._now", return_value=now + timedelta(minutes=6)):
                 expired = state.job(job["id"])["report"]
         self.assertEqual(fresh["brief"]["total_review"], 5)
         self.assertEqual(fresh["brief"]["total_urgent"], 1)
@@ -577,7 +577,7 @@ class LocalHTTPTests(unittest.TestCase):
         connection = http.client.HTTPConnection("127.0.0.1", self.server.server_address[1], timeout=2)
         defaults = {}
         if data is not None:
-            defaults = {"Content-Type": "application/json", "X-WebSignal-Token": self.server.state.csrf_token}
+            defaults = {"Content-Type": "application/json", "X-Verifact-Token": self.server.state.csrf_token}
         defaults.update(headers or {})
         try:
             connection.request(method, path, body=json.dumps(data) if data is not None else None, headers=defaults)
@@ -603,7 +603,7 @@ class LocalHTTPTests(unittest.TestCase):
             self.assertNotIn(FAKE_KEY.encode(), subsequent)
 
     def test_reputation_key_endpoint_only_returns_configuration_state(self):
-        with patch.dict("os.environ", {}, clear=True), patch("websignal.server.inspect_urls") as lookup:
+        with patch.dict("os.environ", {}, clear=True), patch("verifact.server.inspect_urls") as lookup:
             status, _, raw = self.request("POST", "/api/settings", {"reputation_key": FAKE_REPUTATION_KEY})
             self.assertEqual(status, 200)
             self.assertTrue(json.loads(raw)["reputation_configured"])
@@ -639,7 +639,7 @@ class LocalHTTPTests(unittest.TestCase):
         state = self.server.state
         job = completed_job(state)
         path = f"/api/scans/{job['id']}/reputation"
-        with patch("websignal.server.inspect_urls") as lookup:
+        with patch("verifact.server.inspect_urls") as lookup:
             for body in [{}, {"consent": False}, {"consent": "true"}, {"consent": 1}]:
                 self.assertEqual(self.request("POST", path, body)[0], 400)
         lookup.assert_not_called()
@@ -662,7 +662,7 @@ class LocalHTTPTests(unittest.TestCase):
         previous = deepcopy(job["report"])
         previous["created_at"] = "2026-01-01T00:00:00+00:00"
         previous["extra_ignored_padding"] = "a" * 9000
-        with patch("websignal.server.run_scan") as scanner, patch("websignal.server.inspect_urls") as lookup:
+        with patch("verifact.server.run_scan") as scanner, patch("verifact.server.inspect_urls") as lookup:
             status, _, raw = self.request("POST", path, {"previous": previous})
         self.assertEqual(status, 200, raw)
         self.assertTrue(json.loads(raw)["report"]["comparison"]["available"])
@@ -676,7 +676,7 @@ class LocalHTTPTests(unittest.TestCase):
             with self.subTest(path=path):
                 status, headers, raw = self.request("GET", path)
                 self.assertEqual(status, 200)
-                self.assertIn(b"VerifyReportView", raw)
+                self.assertIn(b"VerifactReportView", raw)
 
     def test_external_navigation_can_open_only_the_public_shell(self):
         headers = {"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "document"}
@@ -701,7 +701,7 @@ class LocalHTTPTests(unittest.TestCase):
             status, _, _ = self.request("POST", path, {"refresh": True})
             self.assertEqual(status, 202)
             start.assert_called_once_with(job["id"], refresh=True)
-        with patch("websignal.server.explain") as explain:
+        with patch("verifact.server.explain") as explain:
             status, _, _ = self.request("POST", path, {"refresh": "true"})
             self.assertEqual(status, 400)
         explain.assert_not_called()
@@ -712,12 +712,12 @@ class LocalHTTPTests(unittest.TestCase):
             with self.subTest(headers=headers):
                 status, _, _ = self.request("GET", "/api/config", headers=headers)
                 self.assertEqual(status, 403)
-        status, _, _ = self.request("POST", "/api/demo", {}, {"X-WebSignal-Token": ""})
+        status, _, _ = self.request("POST", "/api/demo", {}, {"X-Verifact-Token": ""})
         self.assertEqual(status, 403)
         self.assertEqual(self.server.state.list_jobs(), [])
 
     def test_demo_can_be_fetched_downloaded_and_previewed_without_ai(self):
-        with patch("websignal.server.run_scan") as scan, patch("websignal.server.explain") as explain:
+        with patch("verifact.server.run_scan") as scan, patch("verifact.server.explain") as explain:
             status, _, raw = self.request("POST", "/api/demo", {})
             self.assertEqual(status, 200)
             job = json.loads(raw)

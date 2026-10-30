@@ -5,10 +5,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.cli import main
-from websignal.links import analyze_link, domain_matches, normalize_target
-from websignal.network import Client, Fetch, Response, ScanError
-from websignal.scanner import scan
+from verifact.cli import main
+from verifact.links import analyze_link, domain_matches, normalize_target
+from verifact.network import Client, Fetch, Response, ScanError
+from verifact.scanner import scan
 
 
 def observed(url, status=200, location=None):

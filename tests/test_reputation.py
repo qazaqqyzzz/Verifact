@@ -6,7 +6,7 @@ import json
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal import reputation
+from verifact import reputation
 
 
 FAKE_KEY = "test-google-key-not-a-real-credential"

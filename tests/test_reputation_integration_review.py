@@ -6,9 +6,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal import reputation
-from websignal.scanner import demo_report
-from websignal.server import AppState
+from verifact import reputation
+from verifact.scanner import demo_report
+from verifact.server import AppState
 
 
 KEY = "fake-key-for-offline-integration-review"
@@ -42,7 +42,7 @@ class ReputationIntegrationReviewTests(unittest.TestCase):
 
     def test_listing_does_not_change_configuration_or_expose_the_api_key(self):
         before = self.state.job(self.identifier)["report"]
-        with patch("websignal.server.threading.Thread"):
+        with patch("verifact.server.threading.Thread"):
             self.state.start_reputation(self.identifier, consent=True)
         with patch.object(reputation, "_now", return_value=NOW), patch.object(reputation, "_post", return_value=threat_response()):
             self.state._reputation_worker(self.identifier, [URL], KEY)
@@ -58,7 +58,7 @@ class ReputationIntegrationReviewTests(unittest.TestCase):
         with patch.object(reputation, "_now", return_value=NOW), patch.object(reputation, "_post", return_value=threat_response()):
             self.state._reputation_worker(self.identifier, [URL], KEY)
         stored = deepcopy(self.state.jobs[self.identifier]["report"]["reputation"])
-        with patch.object(reputation, "_now", return_value=NOW + timedelta(minutes=6)), patch("websignal.server.inspect_urls") as lookup:
+        with patch.object(reputation, "_now", return_value=NOW + timedelta(minutes=6)), patch("verifact.server.inspect_urls") as lookup:
             displayed = self.state.job(self.identifier)["report"]["reputation"]
         self.assertEqual(displayed["status"], "unavailable")
         self.assertTrue(displayed["stale"])

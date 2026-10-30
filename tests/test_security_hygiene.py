@@ -4,10 +4,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.assessment import assess
-from websignal.checks import page_checks, read_page
-from websignal.network import Response, response_headers
-from websignal.security_hygiene import TITLES, hygiene_checks
+from verifact.assessment import assess
+from verifact.checks import page_checks, read_page
+from verifact.network import Response, response_headers
+from verifact.security_hygiene import TITLES, hygiene_checks
 
 
 def response(body="<p>Public information</p>", headers=None, **kwargs):
@@ -189,7 +189,7 @@ class SecurityHygieneTests(unittest.TestCase):
     def test_hygiene_never_performs_network_or_changes_the_eight_weighted_checks(self):
         res = response('<input type="password"><iframe sandbox="allow-scripts allow-same-origin" src="/"></iframe>',
                        headers={"cache-control": "public", "access-control-allow-origin": "null"})
-        with patch("websignal.network.Client.request") as fetch, patch("websignal.network.resolve_public") as dns:
+        with patch("verifact.network.Client.request") as fetch, patch("verifact.network.resolve_public") as dns:
             all_findings = page_checks(res)
         fetch.assert_not_called()
         dns.assert_not_called()

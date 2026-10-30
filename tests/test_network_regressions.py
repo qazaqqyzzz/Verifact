@@ -5,8 +5,8 @@ import socket
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.checks import page_checks, transport_checks
-from websignal.network import Client, Fetch, ScanError, normalize_domain, response_headers, validate_url
+from verifact.checks import page_checks, transport_checks
+from verifact.network import Client, Fetch, ScanError, normalize_domain, response_headers, validate_url
 
 
 PUBLIC = (socket.AF_INET, socket.SOCK_STREAM, 6, ("93.184.215.14", 80))
@@ -35,8 +35,8 @@ def wire_response(wire):
         # server listener, DNS lookup or external network is needed.
         peer.sendall(wire)
         peer.shutdown(socket.SHUT_WR)
-        with patch("websignal.network.resolve_public", return_value=[PUBLIC]), \
-                patch("websignal.network.socket.socket", return_value=adapter):
+        with patch("verifact.network.resolve_public", return_value=[PUBLIC]), \
+                patch("verifact.network.socket.socket", return_value=adapter):
             yield adapter
     finally:
         client_socket.close()
@@ -56,9 +56,9 @@ class BodyFramingRegressionTests(unittest.TestCase):
                 try:
                     peer.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
                     peer.shutdown(socket.SHUT_WR)
-                    with patch("websignal.network.resolve_public", return_value=[PUBLIC]) as resolve, \
-                            patch("websignal.network.socket.socket", return_value=adapter), \
-                            patch("websignal.network.ssl.create_default_context", return_value=context):
+                    with patch("verifact.network.resolve_public", return_value=[PUBLIC]) as resolve, \
+                            patch("verifact.network.socket.socket", return_value=adapter), \
+                            patch("verifact.network.ssl.create_default_context", return_value=context):
                         response = Client().request(scheme + "://example.com/path")
                     request = peer.recv(4096)
                     self.assertEqual(response.status, 200)
@@ -124,10 +124,10 @@ class BodyFramingRegressionTests(unittest.TestCase):
         context.wrap_socket.return_value = sock
         sock.getpeercert.return_value = {"notAfter": "Dec 31 23:59:59 2099 GMT"}
         sock.version.return_value = "TLSv1.3"
-        with patch("websignal.network.resolve_public", return_value=[PUBLIC]), \
-                patch("websignal.network.socket.socket", return_value=sock), \
-                patch("websignal.network.ssl.create_default_context", return_value=context), \
-                patch("websignal.network.http.client.HTTPConnection", return_value=connection):
+        with patch("verifact.network.resolve_public", return_value=[PUBLIC]), \
+                patch("verifact.network.socket.socket", return_value=sock), \
+                patch("verifact.network.ssl.create_default_context", return_value=context), \
+                patch("verifact.network.http.client.HTTPConnection", return_value=connection):
             fetched = Client().fetch("https://example.com/")
         context.wrap_socket.assert_called_once_with(sock, server_hostname="example.com")
         self.assertIsNone(fetched.error)
@@ -199,11 +199,11 @@ class AddressFallbackRegressionTests(unittest.TestCase):
             raise TimeoutError("first address timed out")
 
         first.connect.side_effect = first_timeout
-        with patch("websignal.network.resolve_public", return_value=[PUBLIC, fallback]), \
-                patch("websignal.network.socket.socket", side_effect=[first, second]), \
-                patch("websignal.network.time.monotonic", side_effect=lambda: clock[0]), \
-                patch("websignal.network.time.sleep"), \
-                patch("websignal.network.http.client.HTTPConnection", return_value=connection):
+        with patch("verifact.network.resolve_public", return_value=[PUBLIC, fallback]), \
+                patch("verifact.network.socket.socket", side_effect=[first, second]), \
+                patch("verifact.network.time.monotonic", side_effect=lambda: clock[0]), \
+                patch("verifact.network.time.sleep"), \
+                patch("verifact.network.http.client.HTTPConnection", return_value=connection):
             client = Client(timeout=8)
             fetched = client.fetch("http://example.com/")
         self.assertIsNone(fetched.error)
@@ -230,11 +230,11 @@ class AddressFallbackRegressionTests(unittest.TestCase):
             created.append(sock)
             return sock
 
-        with patch("websignal.network.resolve_public", return_value=answers), \
-                patch("websignal.network.socket.socket", side_effect=socket_factory), \
-                patch("websignal.network.time.monotonic", side_effect=lambda: clock[0]), \
-                patch("websignal.network.time.sleep"), \
-                patch("websignal.network.http.client.HTTPConnection") as http:
+        with patch("verifact.network.resolve_public", return_value=answers), \
+                patch("verifact.network.socket.socket", side_effect=socket_factory), \
+                patch("verifact.network.time.monotonic", side_effect=lambda: clock[0]), \
+                patch("verifact.network.time.sleep"), \
+                patch("verifact.network.http.client.HTTPConnection") as http:
             client = Client(timeout=8)
             fetched = client.fetch("http://example.com/")
         self.assertIsNone(fetched.response)

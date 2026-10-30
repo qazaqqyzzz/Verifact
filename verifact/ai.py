@@ -17,7 +17,7 @@ from .profile import profile_for_report
 
 
 DEFAULT_MODELS = {"openai": "gpt-6-luna", "ollama": "qwen3.5:2b-q4_K_M"}
-PROMPT_VERSION = "websignal-explain-4"
+PROMPT_VERSION = "verifact-explain-4"
 VALIDATION_NOTE = ("The overview, recorded observations and scope limits are supplied by Verifact. "
                    "The model adds significance and review advice for observed issues. Unknown checks use fixed "
                    "context and evidence requests; passed and informational checks use fixed context without configuration advice. "
@@ -442,7 +442,7 @@ def explain(report, provider="ollama", model=None, max_output_tokens=1800, timeo
             raise AIError("Set OPENAI_API_KEY in your terminal or use --prompt-key for hidden input. Do not paste your key into chat.")
         payload = {"model": model, "input": request["messages"], "store": False,
                    "max_output_tokens": max_output_tokens,
-                   "text": {"format": {"type": "json_schema", "name": "websignal_explanation", "strict": True, "schema": request["schema"]}}}
+                   "text": {"format": {"type": "json_schema", "name": "verifact_explanation", "strict": True, "schema": request["schema"]}}}
         if model == DEFAULT_MODELS["openai"]:
             payload["reasoning"] = {"effort": "none"}
     else:

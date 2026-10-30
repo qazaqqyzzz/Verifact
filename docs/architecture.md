@@ -1,6 +1,6 @@
 # Verifact architecture
 
-Verifact 0.6 has two views over one evidence model: **Link check** guidance and a **Developer** configuration review. The product name does not rename the `websignal` Python implementation or invalidate schema-version-1 reports. `python -m verify`, `python -m websignal`, and the installed `verifact`, `verify` and `websignal` commands call the same CLI.
+Verifact 0.6 has two views over one evidence model: **Link check** guidance and a **Developer** configuration review. The implementation lives in the `verifact` Python package. `python -m verifact` and the installed `verifact` command call the same CLI. Existing schema-version-1 reports remain readable.
 
 ```mermaid
 flowchart TD
@@ -81,7 +81,7 @@ The HTML parser observes raw markup without executing scripts or fetching resour
 
 ## Local web interface
 
-`server.py` uses Python's standard-library HTTP server and serves the buildless HTML/CSS/JavaScript interface from `websignal/static/`. The `serve` command binds exclusively to `127.0.0.1`, normally on port 8765. The web app is intended for trusted use on the same computer, not as an Internet-facing service.
+`server.py` uses Python's standard-library HTTP server and serves the buildless HTML/CSS/JavaScript interface from `verifact/static/`. The `serve` command binds exclusively to `127.0.0.1`, normally on port 8765. The web app is intended for trusted use on the same computer, not as an Internet-facing service.
 
 The browser accepts a public domain or HTTP(S) URL. Input parsing rejects credentials, custom ports, invalid hostnames and recognized private-token links. The full canonical URL travels to the scanner through standard input, avoiding the process command line; expected-domain input is separately normalized. Network requests retain the existing public-IP checks and per-redirect validation. The child scan process is invoked without a shell and does not inherit `OPENAI_API_KEY` or `GOOGLE_SAFE_BROWSING_API_KEY`.
 

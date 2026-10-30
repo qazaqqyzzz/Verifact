@@ -3,10 +3,10 @@ import socket
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.checks import page_checks
-from websignal.network import Client, Fetch, Response
-from websignal.profile import profile_for_report, site_profile
-from websignal.scanner import finish_report
+from verifact.checks import page_checks
+from verifact.network import Client, Fetch, Response
+from verifact.profile import profile_for_report, site_profile
+from verifact.scanner import finish_report
 
 
 def response(body="", **kwargs):
@@ -120,9 +120,9 @@ class CookieObservationTests(unittest.TestCase):
         incoming.read1.side_effect = [b"<title>Example</title>", b""]
         connection.getresponse.return_value = incoming
         public = (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.215.14", 80))
-        with patch("websignal.network.socket.getaddrinfo", return_value=[public]), \
-             patch("websignal.network.socket.socket", return_value=sock), \
-             patch("websignal.network.http.client.HTTPConnection", return_value=connection):
+        with patch("verifact.network.socket.getaddrinfo", return_value=[public]), \
+             patch("verifact.network.socket.socket", return_value=sock), \
+             patch("verifact.network.http.client.HTTPConnection", return_value=connection):
             observed = Client().request("http://example.com/")
         self.assertEqual(len(observed.set_cookie_headers), 2)
         self.assertNotIn("set-cookie", observed.headers)

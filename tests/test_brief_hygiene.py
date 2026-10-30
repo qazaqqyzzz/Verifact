@@ -4,12 +4,12 @@ from copy import deepcopy
 import unittest
 
 from test_brief import clear_report
-from websignal.assessment import assess
-from websignal.brief import HYGIENE_COPY, build_brief
-from websignal.checks import page_checks
-from websignal.network import Response
-from websignal.reports import html_report, text_report
-from websignal.visitor_assessment import build_visitor_assessment
+from verifact.assessment import assess
+from verifact.brief import HYGIENE_COPY, build_brief
+from verifact.checks import page_checks
+from verifact.network import Response
+from verifact.reports import html_report, text_report
+from verifact.visitor_assessment import build_visitor_assessment
 
 
 def hygiene_findings():

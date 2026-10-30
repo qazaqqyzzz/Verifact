@@ -4,12 +4,12 @@ from datetime import datetime, timedelta, timezone
 import unittest
 from unittest.mock import patch
 
-from websignal.reports import html_report, text_report
-from websignal.scanner import demo_report
-from websignal.threat_feed import FeedSnapshot, match_hosts
+from verifact.reports import html_report, text_report
+from verifact.scanner import demo_report
+from verifact.threat_feed import FeedSnapshot, match_hosts
 
 
-class VerifyReportTests(unittest.TestCase):
+class VerifactReportTests(unittest.TestCase):
     def test_saved_visitor_copy_is_recomputed_and_provider_warning_is_not_persistent(self):
         report = demo_report()
         report["visitor_assessment"] = {"status": "no_warning", "summary": "Guaranteed safe <script>bad()</script>",
@@ -17,7 +17,7 @@ class VerifyReportTests(unittest.TestCase):
         now = datetime.now(timezone.utc)
         report["community_reputation"] = match_hosts([report["domain"]], FeedSnapshot(
             frozenset({report["domain"]}), now, now + timedelta(minutes=5)), now=now)
-        with patch("websignal.threat_feed._download") as download, patch("websignal.network.socket.getaddrinfo") as dns:
+        with patch("verifact.threat_feed._download") as download, patch("verifact.network.socket.getaddrinfo") as dns:
             markup, plain = html_report(report), text_report(report)
         self.assertIn("LINK CHECK SNAPSHOT", markup)
         self.assertIn("DEVELOPER CONFIGURATION", markup)

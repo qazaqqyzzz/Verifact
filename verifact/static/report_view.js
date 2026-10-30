@@ -2,7 +2,7 @@
 
 // Refresh the presentation without discarding independent recorded warnings.
 // No requests, DOM access or score changes happen here.
-const VerifyReportView = (() => {
+const VerifactReportView = (() => {
   function visitor(report, now = Date.now()) {
     const value = report.visitor_assessment;
     if (!value) return {
@@ -40,4 +40,4 @@ const VerifyReportView = (() => {
   return {visitor};
 })();
 
-if (typeof module !== "undefined" && module.exports) module.exports = VerifyReportView;
+if (typeof module !== "undefined" && module.exports) module.exports = VerifactReportView;

@@ -7,10 +7,10 @@ import re
 import unittest
 from unittest.mock import patch
 
-from websignal.network import Response
-from websignal.page_risks import assess_page_risks
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.network import Response
+from verifact.page_risks import assess_page_risks
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 def inventory_report(body, truncated=False):
@@ -44,7 +44,7 @@ class PageDependencyReportTests(unittest.TestCase):
                                   '<script src="/same-origin.js"></script><script>inline()</script>'
                                   '<iframe src="https://frames.example.net/private/embed?id=never-export"></iframe>')
         original = deepcopy(report)
-        with patch("websignal.network.Client.request") as request:
+        with patch("verifact.network.Client.request") as request:
             markup, plain = html_report(report), text_report(report)
         request.assert_not_called()
         section = dependency_section(markup)

@@ -8,13 +8,13 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.ai import (
+from verifact.ai import (
     AIError, DEFAULT_MODELS, MAX_PAYLOAD_BYTES, _post, add_ai_sample,
     explain, load_report, prepare_messages, preview, validate_output,
 )
-from websignal.cli import main
-from websignal.reports import html_report, text_report
-from websignal.scanner import demo_report
+from verifact.cli import main
+from verifact.reports import html_report, text_report
+from verifact.scanner import demo_report
 
 
 FAKE_KEY = "test-key-not-a-real-credential"
@@ -41,7 +41,7 @@ class AIRequestTests(unittest.TestCase):
         report = demo_report()
         report["findings"][0]["status"] = "unknown"
         original = deepcopy(report)
-        with patch("websignal.ai._post", return_value=openai_response()) as post:
+        with patch("verifact.ai._post", return_value=openai_response()) as post:
             result = explain(report, "openai", api_key=FAKE_KEY)
         post.assert_called_once()
         provider, payload = post.call_args.args
@@ -69,7 +69,7 @@ class AIRequestTests(unittest.TestCase):
         self.assertEqual(report, original)
 
     def test_missing_key_never_calls_provider(self):
-        with patch.dict("os.environ", {}, clear=True), patch("websignal.ai._post") as post:
+        with patch.dict("os.environ", {}, clear=True), patch("verifact.ai._post") as post:
             with self.assertRaisesRegex(AIError, "OPENAI_API_KEY"):
                 explain(demo_report(), "openai")
         post.assert_not_called()
@@ -78,7 +78,7 @@ class AIRequestTests(unittest.TestCase):
         response = {"done": True, "message": {"content": json.dumps(answer())},
                     "prompt_eval_count": 123, "eval_count": 45}
         with patch.dict("os.environ", {"OPENAI_API_KEY": FAKE_KEY}), \
-                patch("websignal.ai._post", return_value=response) as post:
+                patch("verifact.ai._post", return_value=response) as post:
             result = explain(demo_report(), "ollama", api_key=FAKE_KEY)
         post.assert_called_once()
         self.assertEqual(post.call_args.args[0], "ollama")
@@ -90,7 +90,7 @@ class AIRequestTests(unittest.TestCase):
         self.assertNotIn(FAKE_KEY, json.dumps(payload))
         self.assertEqual(result["ai"]["model"], "qwen3.5:2b-q4_K_M")
         self.assertEqual(result["ai"]["usage"]["input_tokens"], 123)
-        with patch("websignal.ai._post", side_effect=AIError("Local model unavailable")) as post:
+        with patch("verifact.ai._post", side_effect=AIError("Local model unavailable")) as post:
             with self.assertRaises(AIError):
                 explain(demo_report(), "ollama")
         post.assert_called_once()
@@ -101,7 +101,7 @@ class AIRequestTests(unittest.TestCase):
         for model, override in [("qwen3.5:4b-q4_K_M", True), ("qwen3.5", True),
                                 ("llama3.2:3b", False), ("gpt-oss:20b", False),
                                 ("qwen3:4b", False)]:
-            with self.subTest(model=model), patch("websignal.ai._post", return_value=response) as post:
+            with self.subTest(model=model), patch("verifact.ai._post", return_value=response) as post:
                 explain(demo_report(), "ollama", model=model)
                 payload = post.call_args.args[1]
                 self.assertEqual("think" in payload, override)
@@ -113,7 +113,7 @@ class AIRequestTests(unittest.TestCase):
     def test_rejected_model_or_limits_make_no_call(self):
         for kwargs in [{"model": "model:cloud"}, {"max_output_tokens": 100000},
                        {"timeout": 0}, {"model": "bad model"}]:
-            with self.subTest(kwargs=kwargs), patch("websignal.ai._post") as post:
+            with self.subTest(kwargs=kwargs), patch("verifact.ai._post") as post:
                 with self.assertRaises(AIError):
                     explain(demo_report(), **kwargs)
                 post.assert_not_called()
@@ -122,7 +122,7 @@ class AIRequestTests(unittest.TestCase):
         connection = Mock()
         response = Mock(status=302)
         connection.getresponse.return_value = response
-        with patch("websignal.ai.http.client.HTTPSConnection", return_value=connection) as factory:
+        with patch("verifact.ai.http.client.HTTPSConnection", return_value=connection) as factory:
             with self.assertRaisesRegex(AIError, "HTTP 302") as failure:
                 _post("openai", {"model": DEFAULT_MODELS["openai"]}, api_key=FAKE_KEY)
         self.assertEqual(factory.call_args.args, ("api.openai.com",))
@@ -142,7 +142,7 @@ class AIValidationTests(unittest.TestCase):
         ]
         original = demo_report()
         for response in responses:
-            with self.subTest(response=response), patch("websignal.ai._post", return_value=response) as post:
+            with self.subTest(response=response), patch("verifact.ai._post", return_value=response) as post:
                 with self.assertRaises(AIError):
                     explain(original, "openai", api_key=FAKE_KEY)
                 post.assert_called_once()
@@ -162,7 +162,7 @@ class AIValidationTests(unittest.TestCase):
 
     def test_incomplete_ollama_output_is_rejected(self):
         response = {"done": True, "done_reason": "length", "message": {"content": json.dumps(answer())}}
-        with patch("websignal.ai._post", return_value=response) as post:
+        with patch("verifact.ai._post", return_value=response) as post:
             with self.assertRaisesRegex(AIError, "incomplete"):
                 explain(demo_report(), "ollama")
         post.assert_called_once()
@@ -171,8 +171,8 @@ class AIValidationTests(unittest.TestCase):
         connection, response = Mock(), Mock(status=200)
         response.read.return_value = b"x" * 17
         connection.getresponse.return_value = response
-        with patch("websignal.ai.MAX_RESPONSE_BYTES", 16), \
-                patch("websignal.ai.http.client.HTTPConnection", return_value=connection) as factory:
+        with patch("verifact.ai.MAX_RESPONSE_BYTES", 16), \
+                patch("verifact.ai.http.client.HTTPConnection", return_value=connection) as factory:
             with self.assertRaisesRegex(AIError, "size limit"):
                 _post("ollama", {})
         self.assertEqual(factory.call_args.args, ("127.0.0.1", 11434))
@@ -218,14 +218,14 @@ class AIEvidenceTests(unittest.TestCase):
         data = json.loads(messages[1]["content"])
         self.assertEqual(next(item for item in data["findings"] if item["id"] == "csp")["evidence"], "[evidence omitted: too large]")
         self.assertLessEqual(len(messages[1]["content"].encode()), MAX_PAYLOAD_BYTES)
-        with patch("websignal.ai.MAX_PAYLOAD_BYTES", 10), self.assertRaisesRegex(AIError, "input budget"):
+        with patch("verifact.ai.MAX_PAYLOAD_BYTES", 10), self.assertRaisesRegex(AIError, "input budget"):
             prepare_messages(report)
 
     def test_oversized_input_file_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "large.json"
             path.write_bytes(b" " * 17)
-            with patch("websignal.ai.MAX_REPORT_BYTES", 16), self.assertRaisesRegex(AIError, "input limit"):
+            with patch("verifact.ai.MAX_REPORT_BYTES", 16), self.assertRaisesRegex(AIError, "input limit"):
                 load_report(path)
 
 
@@ -235,7 +235,7 @@ class AICLIAndRenderingTests(unittest.TestCase):
             path = Path(directory) / "source.json"
             path.write_text(json.dumps(add_ai_sample(demo_report())))
             original = path.read_bytes()
-            with patch("websignal.ai._post") as post, patch("websignal.network.socket.getaddrinfo") as dns, \
+            with patch("verifact.ai._post") as post, patch("verifact.network.socket.getaddrinfo") as dns, \
                     patch("sys.stdout", new_callable=io.StringIO) as output:
                 self.assertEqual(main(["explain", str(path), "--provider", "openai", "--preview"]), 0)
                 self.assertIn("messages", json.loads(output.getvalue()))
@@ -252,7 +252,7 @@ class AICLIAndRenderingTests(unittest.TestCase):
             path = Path(directory) / "source.json"
             path.write_text(json.dumps(demo_report()))
             original = path.read_bytes()
-            with patch("websignal.ai._post") as post, patch("sys.stderr", new_callable=io.StringIO):
+            with patch("verifact.ai._post") as post, patch("sys.stderr", new_callable=io.StringIO):
                 self.assertEqual(main(["explain", str(path), "--output", str(path)]), 2)
                 post.assert_not_called()
             self.assertEqual(path.read_bytes(), original)

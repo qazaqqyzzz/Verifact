@@ -6,11 +6,11 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.assessment import assess
-from websignal.checks import read_page
-from websignal.network import Fetch, Response
-from websignal.page_risks import assess_page_risks, dependency_review, has_integrity_metadata, page_risks_for_report
-from websignal.scanner import demo_report, finish_report
+from verifact.assessment import assess
+from verifact.checks import read_page
+from verifact.network import Fetch, Response
+from verifact.page_risks import assess_page_risks, dependency_review, has_integrity_metadata, page_risks_for_report
+from verifact.scanner import demo_report, finish_report
 
 
 SRI = "sha384-" + base64.b64encode(b"\x01" * 48).decode()
@@ -155,7 +155,7 @@ class PageRiskTests(unittest.TestCase):
     def test_no_network_and_no_weight_changes_when_integrated_into_report(self):
         response = page('<script src="https://cdn.example/a.js"></script>')
         fetched = Fetch(response, [{"url": response.url, "status": 200}])
-        with patch("websignal.network.Client.fetch") as fetch, patch("websignal.network.resolve_public") as dns:
+        with patch("verifact.network.Client.fetch") as fetch, patch("verifact.network.resolve_public") as dns:
             report = finish_report("app.example.com", fetched, fetched, 0, target_url=response.url)
             fetch.assert_not_called()
             dns.assert_not_called()

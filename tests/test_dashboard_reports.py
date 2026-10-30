@@ -5,10 +5,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.ai import add_ai_sample
-from websignal.assessment import enrich
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.ai import add_ai_sample
+from verifact.assessment import enrich
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 class ReportMarkup(HTMLParser):
@@ -55,7 +55,7 @@ class DashboardReportTests(unittest.TestCase):
         profile = dict(report["site_profile"])
         profile.update(summary='Likely a university login page. <script>alert(1)</script>',
                        signals=['Academic domain <img src=x onerror=alert(1)>'])
-        with patch("websignal.reports.profile_for_report", return_value=profile):
+        with patch("verifact.reports.profile_for_report", return_value=profile):
             markup = html_report(report)
             plain = text_report(report)
         self.assertLess(markup.index('class="site-summary"'), markup.index('class="page-title"'))
@@ -118,7 +118,7 @@ class DashboardReportTests(unittest.TestCase):
         payload = '<img src=x onerror="alert(1)">\x1b[2J'
         report["dashboard"]["coverage_gaps"] = [{"finding_id": "https_redirect", "weight": 15,
                                                    "title": "Missing " + payload, "detail": "Reason " + payload}]
-        with patch("websignal.reports.enrich", return_value=report):
+        with patch("verifact.reports.enrich", return_value=report):
             markup, plain = html_report(report), text_report(report)
         self.assertIn("Missing &lt;img", markup)
         self.assertIn("Reason &lt;img", markup)

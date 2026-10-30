@@ -6,11 +6,11 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from websignal.checks import page_checks, transport_checks
-from websignal.cli import main
-from websignal.network import Client, Fetch, Response, ScanError, normalize_domain, resolve_public, validate_url
-from websignal.reports import html_report, text_report
-from websignal.scanner import demo_report
+from verifact.checks import page_checks, transport_checks
+from verifact.cli import main
+from verifact.network import Client, Fetch, Response, ScanError, normalize_domain, resolve_public, validate_url
+from verifact.reports import html_report, text_report
+from verifact.scanner import demo_report
 
 
 PUBLIC = (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.215.14", 80))
@@ -33,13 +33,13 @@ class DestinationTests(unittest.TestCase):
                 validate_url(url)
 
     def test_mixed_dns_answers_are_blocked(self):
-        with patch("websignal.network.socket.getaddrinfo", return_value=[PUBLIC, PRIVATE]), self.assertRaises(ScanError):
+        with patch("verifact.network.socket.getaddrinfo", return_value=[PUBLIC, PRIVATE]), self.assertRaises(ScanError):
             resolve_public("example.com", 80)
 
     def test_ipv6_and_cloud_metadata_addresses_are_blocked(self):
         for ip in ["169.254.169.254", "10.1.2.3", "100.64.0.1", "::1", "fc00::1", "fe80::1", "::ffff:127.0.0.1", "64:ff9b::a00:1", "2002:7f00:1::"]:
             answer = (socket.AF_INET6 if ":" in ip else socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, 80))
-            with self.subTest(ip=ip), patch("websignal.network.socket.getaddrinfo", return_value=[answer]), self.assertRaises(ScanError):
+            with self.subTest(ip=ip), patch("verifact.network.socket.getaddrinfo", return_value=[answer]), self.assertRaises(ScanError):
                 resolve_public("example.com", 80)
 
     def test_connection_uses_validated_ip_without_second_dns_lookup(self):
@@ -49,9 +49,9 @@ class DestinationTests(unittest.TestCase):
         response.getheaders.return_value = [("Content-Type", "text/html")]
         response.read1.side_effect = [b"<html></html>", b""]
         http.getresponse.return_value = response
-        with patch("websignal.network.socket.getaddrinfo", side_effect=[[PUBLIC], [PRIVATE]]) as resolver, \
-                patch("websignal.network.socket.socket", return_value=sock), \
-                patch("websignal.network.http.client.HTTPConnection", return_value=http):
+        with patch("verifact.network.socket.getaddrinfo", side_effect=[[PUBLIC], [PRIVATE]]) as resolver, \
+                patch("verifact.network.socket.socket", return_value=sock), \
+                patch("verifact.network.http.client.HTTPConnection", return_value=http):
             result = Client().request("http://example.com/")
         resolver.assert_called_once()
         sock.connect.assert_called_once_with(PUBLIC[4])
@@ -63,8 +63,8 @@ class DestinationTests(unittest.TestCase):
         first = Response("http://example.com/", 302, {"location": "http://internal.example.com/"})
         real_request = client.request
         with patch.object(client, "request", side_effect=lambda url: first if url == first.url else real_request(url)), \
-                patch("websignal.network.socket.getaddrinfo", return_value=[PRIVATE]), \
-                patch("websignal.network.socket.socket") as connect:
+                patch("verifact.network.socket.getaddrinfo", return_value=[PRIVATE]), \
+                patch("verifact.network.socket.socket") as connect:
             result = client.fetch(first.url)
         self.assertEqual(result.error_kind, "blocked")
         connect.assert_not_called()
@@ -83,9 +83,9 @@ class DestinationTests(unittest.TestCase):
         response.getheaders.return_value = [("Content-Type", "text/html")]
         response.read1.return_value = b"12345"
         http.getresponse.return_value = response
-        with patch("websignal.network.socket.getaddrinfo", return_value=[PUBLIC]), \
-                patch("websignal.network.socket.socket", return_value=sock), \
-                patch("websignal.network.http.client.HTTPConnection", return_value=http):
+        with patch("verifact.network.socket.getaddrinfo", return_value=[PUBLIC]), \
+                patch("verifact.network.socket.socket", return_value=sock), \
+                patch("verifact.network.http.client.HTTPConnection", return_value=http):
             result = Client(max_bytes=4).request("http://example.com/")
         self.assertTrue(result.truncated)
         self.assertEqual(result.body, b"1234")
@@ -119,7 +119,7 @@ class InterpretationTests(unittest.TestCase):
         self.assertNotIn("\x1b", text_report(report))
 
     def test_offline_cli_and_demo_exclusion_from_research(self):
-        with tempfile.TemporaryDirectory() as tmp, patch("websignal.network.socket.getaddrinfo") as dns:
+        with tempfile.TemporaryDirectory() as tmp, patch("verifact.network.socket.getaddrinfo") as dns:
             output = Path(tmp) / "demo.json"
             self.assertEqual(main(["demo", "--format", "json", "--output", str(output)]), 0)
             self.assertTrue(json.loads(output.read_text())["demo"])

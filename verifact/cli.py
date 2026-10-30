@@ -66,7 +66,7 @@ def main(argv=None):
         if args.command == "summarize":
             reports = [json.loads(path.read_text(encoding="utf-8")) for path in args.files]
             if any(report.get("schema_version") != 1 for report in reports):
-                raise ValueError("Expected Verifact JSON reports with schema_version 1 (older WebSignal reports are supported).")
+                raise ValueError("Expected Verifact JSON reports with schema_version 1.")
             if any(report.get("demo") for report in reports):
                 raise ValueError("Synthetic demo reports cannot be included in live-study summaries.")
             print(summarize(reports), end="")

@@ -4,9 +4,9 @@ from copy import deepcopy
 import json
 import unittest
 
-from websignal.assessment import CHECKLIST, assess, built_in_guidance, enrich
-from websignal.reports import html_report, render, text_report
-from websignal.scanner import demo_report
+from verifact.assessment import CHECKLIST, assess, built_in_guidance, enrich
+from verifact.reports import html_report, render, text_report
+from verifact.scanner import demo_report
 
 
 class AssessmentTests(unittest.TestCase):

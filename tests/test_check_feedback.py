@@ -6,11 +6,11 @@ import json
 import unittest
 from unittest.mock import patch
 
-from websignal.check_feedback import HANDLERS, NO_CHANGE, check_feedback_for_report
-from websignal.checks import finding, page_checks
-from websignal.network import Fetch, Response
-from websignal.scanner import demo_report, finish_report
-from websignal.security_contact import parse_security_contact
+from verifact.check_feedback import HANDLERS, NO_CHANGE, check_feedback_for_report
+from verifact.checks import finding, page_checks
+from verifact.network import Fetch, Response
+from verifact.scanner import demo_report, finish_report
+from verifact.security_contact import parse_security_contact
 
 
 def response(body='<html lang="en"><head><title>Example</title><meta name="viewport" content="width=device-width"></head><body></body></html>', headers=None, **kwargs):

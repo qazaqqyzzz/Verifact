@@ -102,7 +102,7 @@ def _download(now):
     environment = dict(os.environ)
     environment.pop("OPENAI_API_KEY", None)
     environment.pop("GOOGLE_SAFE_BROWSING_API_KEY", None)
-    command = [sys.executable, "-m", "websignal.threat_feed", "--download-worker"]
+    command = [sys.executable, "-m", "verifact.threat_feed", "--download-worker"]
     try:
         # The worker accepts no target and writes only the bounded feed body.
         # subprocess.run kills and reaps it on timeout; no background task can

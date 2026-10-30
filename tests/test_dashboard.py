@@ -3,8 +3,8 @@
 from copy import deepcopy
 import unittest
 
-from websignal.assessment import CHECKLIST, assess, enrich
-from websignal.dashboard import build_dashboard
+from verifact.assessment import CHECKLIST, assess, enrich
+from verifact.dashboard import build_dashboard
 
 
 def complete_report():

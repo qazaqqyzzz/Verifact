@@ -11,7 +11,7 @@ Verifact is a free local website checker with two views of the same recorded evi
 
 Paste a public link, choose a view, and export HTML or JSON when you want to keep the result. Switching views does not rescan the website or call AI. The local community-feed check needs no API key; optional Google Safe Browsing and AI have separate settings and disclosure. Built by [qazaqqyzzz](https://github.com/qazaqqyzzz).
 
-This is a portfolio project in defensive security, analysis and AI integration. Explicit rules produce the measured findings and built-in explanations. Those features work without AI. An optional AI layer adds a separate review with references to the findings, using your own OpenAI credit or a local Ollama model. Verifact was previously called Verify and WebSignal; existing reports and commands remain supported.
+This is a portfolio project in defensive security, analysis and AI integration. Explicit rules produce the measured findings and built-in explanations. Those features work without AI. An optional AI layer adds a separate review with references to the findings, using your own OpenAI credit or a local Ollama model.
 
 ## Start locally
 
@@ -27,20 +27,20 @@ cd Verifact
 From the extracted or cloned project folder, start the app on macOS or Linux:
 
 ```sh
-python3 -m verify serve --open
+python3 -m verifact serve --open
 ```
 
 On Windows, use the Python launcher:
 
 ```powershell
-py -3 -m verify serve --open
+py -3 -m verifact serve --open
 ```
 
-The Python module retains its earlier `verify` name for compatibility. No package installation or virtual environment is required. If you already use a virtual environment, run its Python instead.
+No package installation or virtual environment is required. If you already use a virtual environment, run its Python instead.
 
 For VS Code, open **Verifact.code-workspace** from the project folder, then use the integrated terminal. On a Mac, you can also double-click **Start Verifact.command**; it uses `.venv/bin/python` when available and otherwise tries `python3`. Keep the terminal window open while using the app.
 
-The app listens at [http://127.0.0.1:8765](http://127.0.0.1:8765). `--open` opens your browser; omit it to open the address yourself. Use `--port 8766` if the default port is occupied. Press **Ctrl+C** in the terminal to stop the server. Opening `websignal/static/index.html` directly shows launch instructions; that source file cannot run website checks on its own. Downloaded HTML reports and `examples/demo.html` can be opened directly.
+The app listens at [http://127.0.0.1:8765](http://127.0.0.1:8765). `--open` opens your browser; omit it to open the address yourself. Use `--port 8766` if the default port is occupied. Press **Ctrl+C** in the terminal to stop the server. Opening `verifact/static/index.html` directly shows launch instructions; that source file cannot run website checks on its own. Downloaded HTML reports and `examples/demo.html` can be opened directly.
 
 ### Check a website
 
@@ -48,7 +48,7 @@ The app listens at [http://127.0.0.1:8765](http://127.0.0.1:8765). `--open` open
 2. Optionally enter the domain you expected. The path and accepted query are preserved; fragments are omitted. A separate HTTP homepage request checks the hostname's upgrade to HTTPS.
 3. Read the result in your selected view. Link check guidance prioritizes observed connection, destination and threat-list warnings. Developer mode shows the configuration checklist and owner recommendations. Both keep unknown or incomplete evidence visible.
 4. Open the evidence for recorded findings, scripts and embeds, redirect details and score methodology. Each important review has an explanation and next step. Download HTML or JSON to keep a snapshot.
-5. Check again after a fix and compare an earlier session snapshot or a saved Verifact/WebSignal JSON report for the same exact URL. AI and Google Safe Browsing remain optional; saving a key does not start either service.
+5. Check again after a fix and compare an earlier session snapshot or a saved Verifact JSON report for the same exact URL. AI and Google Safe Browsing remain optional; saving a key does not start either service.
 
 In Developer mode, ten core security observations feed the compact counts and eight have numeric weights. Additional link, dependency, referrer and configuration-hygiene observations do not change those weights. In Link check mode, “no warning found” describes the checks that ran; it never promises that a link is safe. The two views use different interpretation rules because a missing developer hardening header alone is not evidence that a visitor is being scammed.
 
@@ -65,8 +65,8 @@ The session holds up to **20 check/demo snapshots** in memory. Stopping the serv
 Commands work without starting the web server. Run these from the project folder:
 
 ```sh
-python3 -m verify demo
-python3 -m verify demo --format html --output reports/demo.html
+python3 -m verifact demo
+python3 -m verifact demo --format html --output reports/demo.html
 ```
 
 Open `reports/demo.html` in your browser. The demo is synthetic and makes no network requests. A ready-made copy is also in `examples/demo.html`.
@@ -74,16 +74,16 @@ Open `reports/demo.html` in your browser. The demo is synthetic and makes no net
 To check a public domain or exact link:
 
 ```sh
-python3 -m verify scan example.com
-python3 -m verify scan example.com --format html --output reports/example.html
-python3 -m verify scan example.com --format json --output reports/example.json
-python3 -m verify scan 'https://example.com/catalog?item=12' --expected-domain example.com --format json --output reports/link.json
+python3 -m verifact scan example.com
+python3 -m verifact scan example.com --format html --output reports/example.html
+python3 -m verifact scan example.com --format json --output reports/example.json
+python3 -m verifact scan 'https://example.com/catalog?item=12' --expected-domain example.com --format json --output reports/link.json
 ```
 
 The browser app enables the free community-feed check by default. CLI scans use only the website observations unless you add `--community`:
 
 ```sh
-python3 -m verify scan example.com --community
+python3 -m verifact scan example.com --community
 ```
 
 This downloads a public domain feed and compares the submitted/observed hostnames locally. It does not send your checked URL to the feed provider. A fresh match for the input hostname stops the page visit; a later redirect match can only be identified after that redirect was observed. Feed problems do not become a clean result or silently prevent the ordinary website checks.
@@ -91,8 +91,8 @@ This downloads a public domain feed and compares the submitted/observed hostname
 An optional registration lookup uses IANA's RDAP directory and the relevant registry:
 
 ```sh
-python3 -m verify scan example.com --rdap
-python3 -m verify scan www.example.com --rdap-domain example.com
+python3 -m verifact scan example.com --rdap
+python3 -m verifact scan www.example.com --rdap-domain example.com
 ```
 
 The tool queries the exact supplied registration domain. It does not guess registrable domains from the last two labels, which would be wrong for names under suffixes such as `co.uk`. RDAP availability and public fields vary by registry. Nameserver data is provided through RDAP; DNS resolution itself covers A/AAAA only.
@@ -101,9 +101,9 @@ For an optional disclosure-contact check, add `--security-contact` or enable the
 
 For scripted use, `scan --target-stdin` reads one URL from standard input so it need not appear in the process command line. Supply either the positional link or `--target-stdin`, not both. The web app uses this route for its scanner subprocess.
 
-If using the virtual environment prepared for this checkout, replace `python3` with `.venv/bin/python`. Optional installation with `python3 -m pip install -e .` adds the shorter `verifact` command, for example `verifact serve --open`. Installation is not necessary for `python3 -m verify`.
+If using the virtual environment prepared for this checkout, replace `python3` with `.venv/bin/python`. Optional installation with `python3 -m pip install -e .` adds the shorter `verifact` command, for example `verifact serve --open`. Installation is not necessary for `python3 -m verifact`.
 
-Compatibility is preserved: `python3 -m verify`, `python3 -m websignal`, the installed `verify` and `websignal` commands, their Python namespaces, **Start Verify.command** and **Start WebSignal.command** still work. Existing schema-version-1 JSON reports can be rendered and compared. The distribution name is now `verifact-cli`; this repository does not imply that a package has been published to PyPI.
+Existing schema-version-1 JSON reports can still be rendered and compared. The distribution name is `verifact-cli`; this repository does not imply that a package has been published to PyPI.
 
 ## What it reports
 
@@ -218,7 +218,7 @@ First save a scan as JSON. The `explain` command reads that saved report, makes 
 Inspect the exact messages and output schema before making a request:
 
 ```sh
-python3 -m verify explain reports/example.json --provider openai --preview
+python3 -m verifact explain reports/example.json --provider openai --preview
 ```
 
 `--preview` needs no key and makes no network requests. The model receives selected report fields with bounded evidence and masked URL query strings/fragments. It does not receive complete HTML, cookies or your API key as prompt content. This masking is limited redaction, not a guarantee that every sensitive detail has been removed; inspect the preview before sending a private report to an external provider.
@@ -228,8 +228,8 @@ python3 -m verify explain reports/example.json --provider openai --preview
 Use `--prompt-key` to enter your key at a hidden terminal prompt:
 
 ```sh
-python3 -m verify explain reports/example.json --provider openai --prompt-key --format json --output reports/example-ai.json
-python3 -m verify render reports/example-ai.json --format html --output reports/example-ai.html
+python3 -m verifact explain reports/example.json --provider openai --prompt-key --format json --output reports/example-ai.json
+python3 -m verifact render reports/example-ai.json --format html --output reports/example-ai.html
 ```
 
 If `OPENAI_API_KEY` is already set in your terminal environment, omit `--prompt-key`. Keep the key out of source files, chat messages and GitHub. Verifact does not automatically load `.env` files. The `render` command uses only the saved JSON and makes no model request, so you can regenerate the HTML without another API charge.
@@ -242,8 +242,8 @@ Install [Ollama](https://ollama.com/download), open the Ollama app and keep it r
 
 ```sh
 ollama pull qwen3.5:2b-q4_K_M
-python3 -m verify explain reports/example.json --provider ollama --format json --output reports/example-ai-local.json
-python3 -m verify render reports/example-ai-local.json --format html --output reports/example-ai-local.html
+python3 -m verifact explain reports/example.json --provider ollama --format json --output reports/example-ai-local.json
+python3 -m verifact render reports/example-ai-local.json --format html --output reports/example-ai-local.html
 ```
 
 After pulling the model, select **Local AI · Qwen via Ollama** in the web app's Settings, save, and request an explanation from a completed report. Ollama is also the default provider for the command-line `explain` command. The default local model is [Qwen 3.5 2B (`qwen3.5:2b-q4_K_M`)](https://ollama.com/library/qwen3.5:2b-q4_K_M), with an approximately **1.9 GB model download**, plus Ollama itself. Running it needs additional memory beyond the file size. It uses your computer's memory and compute; speed and output quality depend on the hardware, available memory and input length. It is a lightweight option, not a guarantee of comfortable performance on every computer. Verifact contacts only `127.0.0.1:11434/api/chat` for this provider. It does not download models or switch to a cloud service automatically. See the [Ollama local setup FAQ](https://docs.ollama.com/faq) and [structured outputs documentation](https://docs.ollama.com/capabilities/structured-outputs).
@@ -270,7 +270,7 @@ In the web app, an older saved answer can be updated only through an explicit **
 To preview the AI section's layout without installing a model or using credit:
 
 ```sh
-python3 -m verify demo --ai-sample --format html --output reports/ai-layout-demo.html
+python3 -m verifact demo --ai-sample --format html --output reports/ai-layout-demo.html
 ```
 
 This sample is explicitly **hand-authored illustrative content**, not output from a real model call. It must not be used as an AI accuracy result.
@@ -292,7 +292,7 @@ The comparison shows changes to selected security observations, response status 
 Save reports from a documented sample, then compare them locally:
 
 ```sh
-python3 -m verify summarize reports/site-a.json reports/site-b.json
+python3 -m verifact summarize reports/site-a.json reports/site-b.json
 ```
 
 This prints per-check counts. Demo fixtures are excluded. Each file counts as one snapshot, so repeated scans of a site must be handled explicitly in your study. Use `docs/evaluation.md` to plan a small study without claiming the sample represents the whole web.
@@ -316,7 +316,7 @@ The web interface binds only to `127.0.0.1`, checks Host and Origin headers, and
 ## Project layout
 
 ```text
-websignal/
+verifact/
   cli.py        # Commands and output files
   network.py    # Validated, bounded HTTP/TLS transport
   links.py      # Exact-link normalization and explainable URL observations
@@ -335,7 +335,6 @@ websignal/
   reports.py    # Terminal, JSON, HTML and study summaries
   server.py     # Local HTTP API, in-memory jobs and scanner subprocesses
   static/       # Browser interface; no frontend build required
-verify/         # New python -m verify entry point; websignal stays compatible
 tests/          # Offline security and interpretation tests
 examples/       # Clearly labeled synthetic report
 docs/           # Architecture and evaluation plan
@@ -376,4 +375,4 @@ Exit codes: `0` successful command (`scan` has a final HTTP or HTTPS response), 
 
 ## License
 
-The project code is available under the [MIT License](LICENSE), copyright 2026 qazaqqyzzz. Bundled Space Grotesk and IBM Plex Mono fonts retain their separate [SIL Open Font Licenses](websignal/static/fonts/README.txt). External data and optional provider services remain subject to their own terms.
+The project code is available under the [MIT License](LICENSE), copyright 2026 qazaqqyzzz. Bundled Space Grotesk and IBM Plex Mono fonts retain their separate [SIL Open Font Licenses](verifact/static/fonts/README.txt). External data and optional provider services remain subject to their own terms.

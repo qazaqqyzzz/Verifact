@@ -59,7 +59,7 @@ def target_domain(value):
 
 def run_scan(target, rdap, expected_domain=None, security_contact=False):
     """A separate process enforces a deadline even if DNS or headers stall."""
-    command = [sys.executable, "-m", "websignal", "scan", "--target-stdin", "--format", "json", "--timeout", "7"]
+    command = [sys.executable, "-m", "verifact", "scan", "--target-stdin", "--format", "json", "--timeout", "7"]
     if expected_domain:
         command.extend(["--expected-domain", expected_domain])
     if rdap:
@@ -392,7 +392,7 @@ class Handler(BaseHTTPRequestHandler):
                              and self.headers.get("Sec-Fetch-Dest") == "document")
         if self.headers.get("Sec-Fetch-Site") == "cross-site" and not public_navigation:
             raise WebError("Cross-site requests are blocked.", 403)
-        if mutating and not secrets.compare_digest(self.headers.get("X-WebSignal-Token", ""), self.server.state.csrf_token):
+        if mutating and not secrets.compare_digest(self.headers.get("X-Verifact-Token", ""), self.server.state.csrf_token):
             raise WebError("Session expired. Refresh the page and try again.", 403)
 
     def _send(self, body, content_type="application/json; charset=utf-8", status=200, attachment=None):

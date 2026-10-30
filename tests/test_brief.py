@@ -5,10 +5,10 @@ from datetime import datetime, timedelta, timezone
 import unittest
 from unittest.mock import patch
 
-from websignal.assessment import assess
-from websignal.brief import build_brief
-from websignal.profile import PROFILE_VERSION
-from websignal.scanner import demo_report
+from verifact.assessment import assess
+from verifact.brief import build_brief
+from verifact.profile import PROFILE_VERSION
+from verifact.scanner import demo_report
 
 
 NOW = datetime(2026, 10, 31, 10, 0, tzinfo=timezone.utc)
@@ -217,7 +217,7 @@ class BriefTests(unittest.TestCase):
     def test_fresh_reputation_match_is_separate_and_expired_match_is_removed(self):
         report = clear_report()
         report["reputation"] = listed_result()
-        with patch("websignal.reputation._now", return_value=NOW):
+        with patch("verifact.reputation._now", return_value=NOW):
             result = build_brief(report)
         self.assertEqual(result["counts"]["met"], 10)
         self.assertEqual(result["counts"]["urgent"], 0)
@@ -227,7 +227,7 @@ class BriefTests(unittest.TestCase):
         self.assertIn("potentially harmful", review["why"])
         self.assertEqual(review["expires_at"], report["reputation"]["expires_at"])
         self.assertEqual(review["attribution"], "Advisory provided by Google")
-        with patch("websignal.reputation._now", return_value=NOW + timedelta(hours=1)):
+        with patch("verifact.reputation._now", return_value=NOW + timedelta(hours=1)):
             expired = build_brief(report)
         self.assertEqual(expired["total_review"], 0)
         self.assertEqual(expired["counts"], result["counts"])
@@ -247,7 +247,7 @@ class BriefTests(unittest.TestCase):
         for key in ("hsts", "csp", "framing", "nosniff", "tls"):
             observation(report, key)["status"] = "attention"
         report["reputation"] = listed_result()
-        with patch("websignal.reputation._now", return_value=NOW):
+        with patch("verifact.reputation._now", return_value=NOW):
             result = build_brief(report)
         self.assertEqual(len(result["reviews"]), 3)
         self.assertEqual(result["total_review"], 6)

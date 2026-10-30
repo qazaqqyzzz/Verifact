@@ -5,10 +5,10 @@ from datetime import datetime, timedelta, timezone
 import unittest
 from unittest.mock import patch
 
-from websignal.network import Fetch, Response
-from websignal.scanner import finish_report
-from websignal import threat_feed as feed
-from websignal.visitor_assessment import build_visitor_assessment
+from verifact.network import Fetch, Response
+from verifact.scanner import finish_report
+from verifact import threat_feed as feed
+from verifact.visitor_assessment import build_visitor_assessment
 
 
 NOW = datetime(2026, 10, 31, 12, tzinfo=timezone.utc)
@@ -34,8 +34,8 @@ def finding(report, identifier):
 
 class VisitorAssessmentTests(unittest.TestCase):
     def setUp(self):
-        self.clock = patch("websignal.threat_feed._now", return_value=NOW)
-        self.cache = patch("websignal.threat_feed._CACHE", feed.FeedCache())
+        self.clock = patch("verifact.threat_feed._now", return_value=NOW)
+        self.cache = patch("verifact.threat_feed._CACHE", feed.FeedCache())
         self.clock.start()
         self.cache.start()
         self.addCleanup(self.clock.stop)
